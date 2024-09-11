@@ -1,0 +1,6 @@
+/venv/
+/venv_laptop/
+/.idea/
+*.pyc
+/oh_sched/todo.todo
+tmp*
