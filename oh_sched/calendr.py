@@ -1,8 +1,10 @@
 import re
 from datetime import datetime, timedelta
 
-import ics
 import pandas as pd
+import tzlocal
+from icalendar import Calendar, Event
+from pytz import timezone
 
 
 def normalize_day_of_week(date_str):
@@ -36,54 +38,68 @@ def to_timedelta(time_str):
     return datetime.strptime(time_str.strip(), s_fmt).time()
 
 
-def start_stop_iter(date_start, date_end, time_str):
-    # convert to date objects
-    date = pd.to_datetime(date_start).date()
+def get_event(date_start, date_end, time_str, tz=None, **kwargs):
+    """ returns 1st start stop datetimes after (or on) a given date """
+    # convert date_start, date_end to date objects
+    date_start = pd.to_datetime(date_start).date()
     date_end = pd.to_datetime(date_end).date()
 
     # move start date up to proper day of the week
     weekday, time_str = time_str.split('@')
     weekday_idx = normalize_day_of_week(weekday)
-    while date.weekday() != weekday_idx:
-        date += timedelta(days=1)
+    while date_start.weekday() != weekday_idx:
+        date_start += timedelta(days=1)
 
-    # convert to timedelta (time since start of day)
+    # convert time_str to timedelta (time since start of day)
     time_start, time_end = time_str.split('-')
     time_start = to_timedelta(time_start)
     time_end = to_timedelta(time_end)
 
-    while date <= date_end:
-        yield (datetime.combine(date, time_start),
-               datetime.combine(date, time_end))
+    # specify start and end time
+    if tz is None:
+        tz = tzlocal.get_localzone()
+    tz = timezone(str(tz))
+    kwargs['dtstart'] = tz.localize(datetime.combine(date_start, time_start))
+    kwargs['dtstart'] = tz.localize(datetime.combine(date_start, time_end))
 
-        date += timedelta(days=7)
+    # compute number of repeats before end date
+    date = date_start
+    for repeats in range(53):
+        if date > date_end:
+            break
+        date = date + timedelta(weeks=1)
+    else:
+        raise AttributeError(f'exceeded max weekly repeats (start: '
+                             f'{date_start} stop: {date_end})')
+    kwargs['rrule'] = {'freq': 'weekly', 'count': repeats}
 
+    # build event with proper attributes of event, may include additional
+    # ones not computed above (e.g. 'summary' or 'description')
+    event = Event()
+    for key, val in kwargs.items():
+        event.add(key, val)
 
-def start_stop_iter_event(*args, name, **kwargs):
-    for start, stop in start_stop_iter(*args, **kwargs):
-        yield ics.Event(name=name,
-                        begin=start,
-                        end=stop)
+    return event
 
 
 def build_calendar(oh_ta_dict, date_start, date_end):
-    cal = ics.Calendar()
+    cal = Calendar()
     for oh, ta_list in oh_ta_dict.items():
         ta_list = [ta.capitalize() for ta in sorted(ta_list)]
-        name = 'Online OH- ' + ', '.join(sorted(ta_list))
-        for event in start_stop_iter_event(name=name,
-                                           date_start=date_start,
-                                           date_end=date_end,
-                                           time_str=oh):
-            cal.events.add(event)
+        summary = 'Online OH- ' + ', '.join(sorted(ta_list))
+        event = get_event(summary=summary,
+                          date_start=date_start,
+                          date_end=date_end,
+                          time_str=oh)
+        cal.add_component(event)
 
     return cal
 
 
 if __name__ == '__main__':
-    x = list(start_stop_iter_event(name='OH test',
-                                   date_start='today',
-                                   date_end='dec 4 2024',
-                                   time_str='Monday @ 6 PM - 7 PM'))
+    event = get_event(name='OH test',
+                  date_start='today',
+                  date_end='dec 4 2024',
+                  time_str='Monday @ 6PM - 7PM')
 
     print('hi')

@@ -25,5 +25,5 @@ if __name__ == '__main__':
                                   date_start='sept 13 2024',
                                   date_end='dec 4 2024')
 
-    with open('oh.ics', 'w') as f:
-        f.writelines(cal.serialize_iter())
+    with open('oh.ics', 'wb') as f:
+        f.write(cal.to_ical())
