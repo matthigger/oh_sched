@@ -1,6 +1,8 @@
 import re
+from collections import Counter
 from collections import defaultdict
 from copy import copy
+from itertools import chain
 
 import numpy as np
 from scipy.optimize import linear_sum_assignment
@@ -9,8 +11,11 @@ INVALID = -1
 
 
 def match(prefs, ta_list, oh_list, oh_per_ta=3, max_ta_per_oh=4, decay=1):
-    # set invalid entries with low score
+    # match operation is destructive
     prefs = copy(prefs)
+    ta_list = copy(ta_list)
+
+    # set invalid entries with low score
     prefs[np.isnan(prefs)] = INVALID
 
     # init
@@ -64,3 +69,30 @@ def get_scale(oh_list, scale_dict):
             if re.search(regex, oh):
                 scale[oh_idx] *= mult
     return scale
+
+
+def get_perc_max(oh_ta_dict, oh_list, ta_list, prefs):
+    """ computes percent of maximum score achieved per ta"""
+    # count oh per ta in dict
+    ta_num_oh_dict = Counter(chain(*oh_ta_dict.values()))
+
+    # compute max score possible
+    ta_max_dict = dict()
+    for ta, num_oh in ta_num_oh_dict.items():
+        ta_idx = ta_list.index(ta)
+        pref_decrease = sorted(prefs[ta_idx, :], reverse=True)
+        ta_max_dict[ta] = sum(pref_decrease[:num_oh])
+
+    # compute score achieved
+    ta_achieve_dict = defaultdict(lambda: 0)
+    for oh, ta_list in oh_ta_dict.items():
+        oh_idx = oh_list.index(oh)
+        for ta in ta_list:
+            ta_idx = ta_list.index(ta)
+            ta_achieve_dict[ta] += prefs[ta_idx, oh_idx]
+
+    # divide
+    perc_max = {ta: ach / ta_max_dict[ta]
+                for ta, ach in ta_achieve_dict.items()}
+
+    return perc_max, ta_num_oh_dict
