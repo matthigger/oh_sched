@@ -35,7 +35,7 @@ def match(prefs, oh_per_ta=3, max_ta_per_oh=4, shuffle=True, seed=0):
 
     # init
     num_ta, num_oh = prefs.shape
-    oh_ta_match = [list() for _ in range(num_ta)]
+    oh_ta_match = [list() for _ in range(num_oh)]
 
     # init random number generator
     rng = np.random.default_rng(seed=seed)
