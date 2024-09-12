@@ -24,18 +24,18 @@ if __name__ == '__main__':
     assert (num_oh == oh_per_ta).all(), 'TAs not given proper number of OH'
     assert not np.isnan(perc_max).any(), 'TA assigned outside availability'
 
-    # # export to ics
-    # cal = oh_sched.build_calendar(oh_ta_dict,
-    #                               date_start='sept 13 2024',
-    #                               date_end='dec 4 2024')
-    #
-    #
-    # with open('oh.ics', 'wb') as f:
-    #     f.write(cal.to_ical())
-    #
-    # # print TAs per slot
-    # for oh, ta_list in oh_ta_dict.items():
-    #     print(f'{oh}: {len(ta_list)} TAs')
+    # export to ics
+    oh_ta_dict = {oh_list[oh]: [name_list[ta] for ta in ta_list]
+                  for oh, ta_list in enumerate(oh_ta_match)}
+    cal = oh_sched.build_calendar(oh_ta_dict,
+                                  date_start='sept 13 2024',
+                                  date_end='dec 4 2024')
+    with open('oh.ics', 'wb') as f:
+        f.write(cal.to_ical())
+
+    # print TAs per slot
+    for oh, ta_list in oh_ta_dict.items():
+        print(f'{oh}: {len(ta_list)} TAs')
 
     print(f'min percentage max score: {perc_max.min():.4f}')
     print(f'mean percentage max score: {perc_max.mean():.4f}')
