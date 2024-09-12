@@ -56,9 +56,12 @@ def match(prefs, oh_per_ta=3, max_ta_per_oh=4, shuffle=True, seed=0):
         _prefs = np.stack(pref_list, axis=1)
 
         if shuffle:
-            # add some noise to shuffle assignment order
+            # add some noise to shuffle assignment order (don't add noise to
+            # invalid positions)
             c = STD_SCALE_NOISE / std_pref
+            bool_invalid = _prefs == INVALID
             _prefs += rng.standard_normal(_prefs.shape) * c
+            _prefs[bool_invalid] = INVALID
 
         # match
         ta_idx, oh_idx = linear_sum_assignment(cost_matrix=_prefs,
