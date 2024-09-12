@@ -5,6 +5,7 @@ def extract_csv(f_csv):
     df = pd.read_csv(f_csv)
 
     # drop duplicates email (take latest)
+    df['Timestamp'] = pd.to_datetime(df['Timestamp'])
     df.sort_values('Timestamp', inplace=True)
     df.drop_duplicates(subset=df.columns[1], keep='last', inplace=True)
 
