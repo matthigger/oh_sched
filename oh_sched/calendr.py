@@ -60,7 +60,7 @@ def get_event(date_start, date_end, time_str, tz=None, **kwargs):
         tz = tzlocal.get_localzone()
     tz = timezone(str(tz))
     kwargs['dtstart'] = tz.localize(datetime.combine(date_start, time_start))
-    kwargs['dtstart'] = tz.localize(datetime.combine(date_start, time_end))
+    kwargs['dtend'] = tz.localize(datetime.combine(date_start, time_end))
 
     # compute number of repeats before end date
     date = date_start
@@ -100,9 +100,10 @@ def build_calendar(oh_ta_dict, date_start, date_end):
 
 
 if __name__ == '__main__':
-    event = get_event(name='OH test',
-                  date_start='today',
-                  date_end='dec 4 2024',
-                  time_str='Monday @ 6PM - 7PM')
+    oh_ta_dict = {'Monday @ 6PM - 7PM': ['ta-test0', 'ta-test1']}
+    cal = build_calendar(oh_ta_dict,
+                         date_start='today',
+                         date_end='dec 4 2024')
+    with open('oh_test.ics', 'wb') as f:
+        f.write(cal.to_ical())
 
-    print('hi')
