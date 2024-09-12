@@ -9,8 +9,11 @@ from scipy.optimize import linear_sum_assignment
 
 INVALID = -1
 
+# scale of preferences to random noise added (to shuffle match order)
+STD_SCALE_NOISE = .001
 
-def match(prefs, oh_per_ta=3, max_ta_per_oh=4):
+
+def match(prefs, oh_per_ta=3, max_ta_per_oh=4, shuffle=True, seed=0):
     """ matches ta to oh slot to maximize sum of prefs achieved
 
     Args:
@@ -18,6 +21,9 @@ def match(prefs, oh_per_ta=3, max_ta_per_oh=4):
             combination of ta and oh.  nan where unavailable
         oh_per_ta (int): office hours assigned per ta
         max_ta_per_oh (int): maximum ta assigned to any particular oh
+        shuffle (bool): toggles shuffling of tie breaking (seems to prefer
+            earlier ta_idx)
+        seed: given to shuffling
 
     Returns:
         oh_ta_match (list of lists): oh_ta_match[oh_idx] is a list of the
@@ -30,6 +36,10 @@ def match(prefs, oh_per_ta=3, max_ta_per_oh=4):
     # init
     num_ta, num_oh = prefs.shape
     oh_ta_match = [list() for _ in range(num_ta)]
+
+    # init random number generator
+    rng = np.random.default_rng(seed=seed)
+    std_pref = np.nanstd(prefs.flatten())
 
     for match_idx in range(oh_per_ta):
         # build new _prefs and _oh_ta_match per availability remaining.
@@ -44,6 +54,11 @@ def match(prefs, oh_per_ta=3, max_ta_per_oh=4):
                 pref_list.append(prefs[:, oh_idx])
                 _oh_ta_match.append(ta_list)
         _prefs = np.stack(pref_list, axis=1)
+
+        if shuffle:
+            # add some noise to shuffle assignment order
+            c = STD_SCALE_NOISE / std_pref
+            _prefs += rng.standard_normal(_prefs.shape) * c
 
         # match
         ta_idx, oh_idx = linear_sum_assignment(cost_matrix=_prefs,
