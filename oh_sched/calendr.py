@@ -8,7 +8,7 @@ from pytz import timezone
 
 
 def normalize_day_of_week(date_str):
-    date_regex = ['mon', 'tues', 'wed', 'thurs', 'fri', 'sat', 'sun']
+    date_regex = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
     match_list = [bool(re.search(pattern, date_str, re.IGNORECASE))
                   for pattern in (date_regex)]
 
