@@ -85,8 +85,11 @@ def get_event(date_start, date_end, time_str, tz=None, **kwargs):
 def build_calendar(oh_ta_dict, date_start, date_end):
     cal = Calendar()
     for oh, ta_list in oh_ta_dict.items():
+        if not ta_list:
+            # skip oh slots without any TAs
+            continue
         ta_list = [ta.capitalize() for ta in sorted(ta_list)]
-        summary = 'Online OH- ' + ', '.join(sorted(ta_list))
+        summary = ', '.join(sorted(ta_list))
         event = get_event(summary=summary,
                           date_start=date_start,
                           date_end=date_end,
