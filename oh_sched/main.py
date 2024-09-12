@@ -5,7 +5,6 @@ if __name__ == '__main__':
     f_csv = 'oh_response_clean.csv'
     oh_per_ta = 3
     max_ta_per_oh = 4
-    decay = .99
     scale_dict = {r'(Friday|Thursday).*[45678] ?PM': 1.1}
 
     # extract
