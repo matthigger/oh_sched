@@ -10,6 +10,13 @@ if __name__ == '__main__':
     # extract
     prefs, email_list, name_list, oh_list = oh_sched.extract_csv(f_csv)
 
+    # print message about
+    num_available = prefs.shape[1] - np.isnan(prefs).sum(axis=1)
+    print(f'lowest 10% of availability:')
+    for ta_idx in np.argsort(num_available)[:len(name_list) // 10]:
+        n = num_available[ta_idx]
+        print(f'  {n} OH slots possible: {email_list[ta_idx]}')
+
     # scale per day (push fridays, & thursdays, later in the day)
     prefs_adjust = prefs * oh_sched.get_scale(oh_list, scale_dict=scale_dict)
 
