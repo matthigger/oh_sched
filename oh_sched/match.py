@@ -82,28 +82,30 @@ def get_scale(oh_list, scale_dict):
     return scale
 
 
-def get_perc_max(oh_ta_dict, oh_list, ta_list, prefs):
+def get_perc_max(oh_ta_match, prefs):
     """ computes percent of maximum score achieved per ta"""
+    num_ta, num_oh = prefs.shape
+
     # count oh per ta in dict
-    ta_num_oh_dict = Counter(chain(*oh_ta_dict.values()))
+    num_oh = np.zeros(num_ta, dtype=int)
+    for ta_list in oh_ta_match:
+        for ta in ta_list:
+            num_oh[ta] += 1
 
     # compute max score possible
-    ta_max_dict = dict()
-    for ta, num_oh in ta_num_oh_dict.items():
-        ta_idx = ta_list.index(ta)
-        pref_decrease = sorted(prefs[ta_idx, :], reverse=True)
-        ta_max_dict[ta] = sum(pref_decrease[:num_oh])
+    ta_max = np.empty(num_ta)
+    for ta, _pref in enumerate(prefs):
+        _pref = _pref[~np.isnan(_pref)]
+        _pref.sort()
+        ta_max[ta] = sum(_pref[-num_oh[ta]:])
 
     # compute score achieved
-    ta_achieve_dict = defaultdict(lambda: 0)
-    for oh, ta_list in oh_ta_dict.items():
-        oh_idx = oh_list.index(oh)
+    ta_achieve = np.zeros(num_ta)
+    for oh, ta_list in enumerate(oh_ta_match):
         for ta in ta_list:
-            ta_idx = ta_list.index(ta)
-            ta_achieve_dict[ta] += prefs[ta_idx, oh_idx]
+            ta_achieve[ta] += prefs[ta, oh]
 
     # divide
-    perc_max = {ta: ach / ta_max_dict[ta]
-                for ta, ach in ta_achieve_dict.items()}
+    perc_max = ta_achieve / ta_max
 
-    return perc_max, ta_num_oh_dict
+    return perc_max, num_oh
