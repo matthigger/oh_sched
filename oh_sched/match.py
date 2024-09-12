@@ -70,6 +70,10 @@ def match(prefs, oh_per_ta=3, max_ta_per_oh=4, shuffle=True, seed=0):
                 raise RuntimeError(f'no availability for TA index: {_ta_idx}')
             _oh_ta_match[_oh_idx].append(_ta_idx)
 
+            # mark this spot as invalid for this TA
+            oh_idx = oh_ta_match.index(_oh_ta_match[_oh_idx])
+            prefs[_ta_idx, oh_idx] = INVALID
+
     return oh_ta_match
 
 
