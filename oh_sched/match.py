@@ -10,56 +10,52 @@ from scipy.optimize import linear_sum_assignment
 INVALID = -1
 
 
-def match(prefs, ta_list, oh_list, oh_per_ta=3, max_ta_per_oh=4, decay=1):
-    # match operation is destructive
-    prefs = copy(prefs)
-    ta_list = copy(ta_list)
+def match(prefs, oh_per_ta=3, max_ta_per_oh=4):
+    """ matches ta to oh slot to maximize sum of prefs achieved
 
+    Args:
+        prefs (np.array): (num_ta, num_oh) preference scores for every
+            combination of ta and oh.  nan where unavailable
+        oh_per_ta (int): office hours assigned per ta
+        max_ta_per_oh (int): maximum ta assigned to any particular oh
+
+    Returns:
+        oh_ta_match (list of lists): oh_ta_match[oh_idx] is a list of the
+            index of all tas assigned particular oh_idx
+    """
     # set invalid entries with low score
+    prefs = copy(prefs)
     prefs[np.isnan(prefs)] = INVALID
 
     # init
-    oh_ta_dict = {oh: list() for oh in oh_list}
-    _oh_per_ta = defaultdict(lambda: 0)
+    num_ta, num_oh = prefs.shape
+    oh_ta_match = [list() for _ in range(num_ta)]
 
-    while ta_list:
+    for match_idx in range(oh_per_ta):
+        # build new _prefs and _oh_ta_match per availability remaining.
+        # (i.e. if each oh spot has 2 open spots then each column repeated
+        # twice and _oh_ta_match has two refs to each list in oh_ta_match)
+        pref_list = list()
+        _oh_ta_match = list()
+        for oh_idx, ta_list in enumerate(oh_ta_match):
+            num_ta_spots_left = max_ta_per_oh - len(ta_list)
+
+            for _ in range(num_ta_spots_left):
+                pref_list.append(prefs[:, oh_idx])
+                _oh_ta_match.append(ta_list)
+        _prefs = np.stack(pref_list, axis=1)
+
         # match
-        ta_idx, oh_idx = linear_sum_assignment(cost_matrix=prefs,
+        ta_idx, oh_idx = linear_sum_assignment(cost_matrix=_prefs,
                                                maximize=True)
 
+        # record & validate matches
         for _ta_idx, _oh_idx in zip(ta_idx, oh_idx):
-            oh = oh_list[_oh_idx]
-            email = ta_list[_ta_idx]
+            if _prefs[_ta_idx, _oh_idx] == INVALID:
+                raise RuntimeError(f'no availability for TA index: {_ta_idx}')
+            _oh_ta_match[_oh_idx].append(_ta_idx)
 
-            if prefs[_ta_idx, _oh_idx] == INVALID:
-                raise RuntimeError(f'no valid slots for TA found: {email}')
-
-            # record match
-            oh_ta_dict[oh].append(email)
-            _oh_per_ta[email] += 1
-
-            # invalidate this match in future iterations
-            prefs[_ta_idx, _oh_idx] = INVALID
-
-            # decay this office hours slot (discourages future selection ->
-            # uniform spread)
-            prefs[:, _oh_idx] *= decay
-
-        # remove any office hours slots which are full
-        for oh, _ta_list in oh_ta_dict.items():
-            if len(_ta_list) >= max_ta_per_oh:
-                _oh_idx = oh_list.index(oh)
-                oh_list.pop(_oh_idx)
-                prefs = np.delete(prefs, _oh_idx, axis=1)
-
-        # remove any emails which have enough oh
-        for email, num_oh in _oh_per_ta.items():
-            if num_oh >= oh_per_ta:
-                _ta_idx = ta_list.index(email)
-                ta_list.pop(_ta_idx)
-                prefs = np.delete(prefs, _ta_idx, axis=0)
-
-    return oh_ta_dict
+    return oh_ta_match
 
 
 def get_scale(oh_list, scale_dict):
