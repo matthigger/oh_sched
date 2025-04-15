@@ -1,0 +1,8 @@
+date_end: Apr 22 2025
+date_start: Apr 15 2025
+f_csv: oh_prefs.csv
+f_out: None
+max_ta_per_oh: null
+oh_per_ta: 1
+scale_dict: null
+verbose: true

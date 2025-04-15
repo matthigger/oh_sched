@@ -16,7 +16,3 @@ def extract_csv(f_csv):
     prefs = df.iloc[:, 3:].values.astype(float)
 
     return prefs, email_list, name_list, oh_list
-
-
-if __name__ == '__main__':
-    extract_csv('oh_response.csv')

@@ -1,8 +1,7 @@
-import argparse
-
 import numpy as np
 
 import oh_sched
+from oh_sched.config import Config
 
 
 def main(config):
@@ -17,11 +16,12 @@ def main(config):
             print(f'  {n} OH slots possible: {email_list[ta_idx]}')
 
     # scale per day
-    prefs_adjust = prefs * oh_sched.get_scale(oh_list,
-                                              scale_dict=config.scale_dict)
+    if config.scale_dict is not None:
+        prefs = prefs * oh_sched.get_scale(oh_list,
+                                           scale_dict=config.scale_dict)
 
     # match
-    oh_ta_match = oh_sched.match(prefs_adjust,
+    oh_ta_match = oh_sched.match(prefs,
                                  oh_per_ta=config.oh_per_ta,
                                  max_ta_per_oh=config.max_ta_per_oh)
 
@@ -59,39 +59,30 @@ def main(config):
             f.write(cal.to_ical())
 
 
-def parse_args(args=None):
-    if args is None:
-        args = []
+if __name__ == '__main__':
+    import argparse
+    import pathlib
 
     parser = argparse.ArgumentParser(
         description='https://github.com/matthigger/oh_sched')
-    # Add arguments to the parser
-    parser.add_argument('--f_csv', type=str, default='oh_prefs.csv',
-                        help='CSV file of TA preferences for each OH slot')
-    parser.add_argument('--oh_per_ta', type=int, default=1,
-                        help='Number of OH assigned per TA')
-    parser.add_argument('--max_ta_per_oh', type=int, default=None,
-                        help='Maximum TAs per OH')
-    parser.add_argument('--scale_dict', type=str, default=None,
-                        help='Dictionary for scaling, represented as a string. If not provided, no scaling will be applied.')
-    parser.add_argument('--date_start', type=str, default='Sept 3 2025',
-                        help='Start date of office hours (inclusive)')
-    parser.add_argument('--date_end', type=str, default='Dec 7 2025',
-                        help='End date for office hourse (inclusive)')
-    parser.add_argument('--f_out', type=str, default='oh.ics',
-                        help='Output ICS calendar file')
-    parser.add_argument('--quiet', action='store_true', dest='verbose',
-                        help='Suppress command line output')
+    parser.add_argument('-c', '--config', type=str, default=None,
+                        help='path to yaml file with configuration.  you may use (and create) a default configuration yaml by not passing this parameter')
+    param = parser.parse_args()
 
-    config = parser.parse_args(args)
+    if param.config is None:
+        f_config = pathlib.Path('config.yaml')
 
-    # Convert scale_dict string to actual dictionary if provided
-    if config.scale_dict is not None:
-        config.scale_dict = eval(config.scale_dict)
+        if f_config.exists():
+            print(f'Using config file {f_config}, pass with -c {f_config} to '
+                  f'avoid this message')
+            config = Config.from_yaml(f_config)
+        else:
+            # build default config, dump to file for user
+            print(f'Using default config {f_config} please revise as needed '
+                  f'(https://github.com/matthigger/oh_sched)')
+            config = Config()
+            config.to_yaml(f_config)
+    else:
+        config = Config.from_yaml(param.config)
 
-    return config
-
-
-if __name__ == '__main__':
-    config = parse_args()
     main(config)
