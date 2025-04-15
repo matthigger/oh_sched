@@ -134,8 +134,21 @@ def get_event(*args, **kwargs):
 
 
 def build_calendar(oh_ta_dict, date_start, date_end):
+    """  builds a calendar, a set of events, from oh_ta_dict
+
+    Args:
+        oh_ta_dict (dict): keys are office hours slots (see time_str in
+            get_event_kwargs()), values are lists of str (TA names)
+        date_start (str): starting date for office hours for course
+            (inclusive), see  get_event_kwargs()
+        date_end (str): ending date for office hours for course (inclusive),
+            see get_event_kwargs()=
+
+    Returns:
+        cal (Calendar): ready to be exported to ical format
+    """
     cal = Calendar()
-    for oh, ta_list in oh_ta_dict.items():
+    for time_str, ta_list in oh_ta_dict.items():
         if not ta_list:
             # skip oh slots without any TAs
             continue
@@ -144,7 +157,7 @@ def build_calendar(oh_ta_dict, date_start, date_end):
         event = get_event(summary=summary,
                           date_start=date_start,
                           date_end=date_end,
-                          time_str=oh)
+                          time_str=time_str)
         cal.add_component(event)
 
     return cal

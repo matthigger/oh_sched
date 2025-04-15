@@ -127,7 +127,6 @@ def get_perc_max(oh_ta_match, prefs):
 
     Returns:
         perc_max (np.array): (num_ta) perc_max score for each TA
-
     """
     num_ta, num_oh = prefs.shape
 
