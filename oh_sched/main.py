@@ -25,9 +25,8 @@ if __name__ == '__main__':
                                  oh_per_ta=oh_per_ta,
                                  max_ta_per_oh=max_ta_per_oh)
 
-    perc_max, num_oh = oh_sched.get_perc_max(oh_ta_match,
-                                             prefs=prefs)
-    assert (num_oh == oh_per_ta).all(), 'TAs not given proper number of OH'
+    perc_max = oh_sched.get_perc_max(oh_ta_match, prefs=prefs)
+    assert (oh_per_ta == oh_per_ta).all(), 'TAs not given proper number of OH'
     assert not np.isnan(perc_max).any(), 'TA assigned outside availability'
 
     # export to ics
