@@ -39,7 +39,10 @@ def main(config):
         # print TAs per slot
         print('Schedule:')
         for oh, ta_list in oh_ta_dict.items():
-            print(f'{oh}: {len(ta_list)} TAs')
+            if not len(ta_list):
+                continue
+
+            print(f'{oh} has {len(ta_list)} TAs: {', '.join(ta_list)}')
 
         print('Percentage Max Score :')
         print(
