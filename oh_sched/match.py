@@ -74,8 +74,11 @@ def match(prefs, oh_per_ta=3, max_ta_per_oh=4, shuffle=True, seed=0):
                 raise RuntimeError(f'no availability for TA index: {_ta_idx}')
             _oh_ta_match[_oh_idx].append(_ta_idx)
 
-            # mark this spot as invalid for this TA
+            # get oh_idx (in original indexing, recall that _oh_ta_match may
+            # have multiple references to the same office hours section)
             oh_idx = oh_ta_match.index(_oh_ta_match[_oh_idx])
+
+            # mark this spot as invalid for this TA
             prefs[_ta_idx, oh_idx] = INVALID
 
     # count oh per ta
