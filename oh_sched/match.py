@@ -12,7 +12,7 @@ INVALID = -1
 STD_SCALE_NOISE = .00001
 
 
-def match(prefs, oh_per_ta=3, max_ta_per_oh=4, shuffle=True, seed=0):
+def match(prefs, oh_per_ta, max_ta_per_oh=None, shuffle=True, seed=0):
     """ matches TA to OH slot to maximize sum of prefs achieved
 
     Args:
@@ -35,6 +35,11 @@ def match(prefs, oh_per_ta=3, max_ta_per_oh=4, shuffle=True, seed=0):
     # init
     num_ta, num_oh = prefs.shape
     oh_ta_match = [list() for _ in range(num_oh)]
+
+    if max_ta_per_oh is None:
+        warnings.warn('max_ta_per_oh not given, all TAs may be assigned to '
+                      'single OH slot')
+        max_ta_per_oh = num_ta
 
     # init random number generator
     rng = np.random.default_rng(seed=seed)
