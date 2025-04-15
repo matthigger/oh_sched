@@ -145,7 +145,7 @@ def build_calendar(oh_ta_dict, date_start, date_end):
             see get_event_kwargs()=
 
     Returns:
-        cal (Calendar): ready to be exported to ical format
+        cal (Calendar): ready to be exported to ics format
     """
     cal = Calendar()
     for time_str, ta_list in oh_ta_dict.items():
