@@ -23,3 +23,16 @@ Including extra text is fine so long as the weekday and start / end times are un
     Office Hours from Monday at 3 PM - 4:15 PM (preferred please)
 
 Hopefully this flexibiliy allows you to communicate with TAs more gracefully in the google form
+
+# Percentage Max
+
+To quantify the quality of the matching, we compute a percentage maximum score for every TA.  Consider the following toy example:
+
+|     | OH0 | OH1 | OH2 | OH3 |
+|-----|-----|-----|-----|-----|
+| TA0 | 4   | 3   |     |     |
+| TA1 |     | 3   | 4   | 1   |
+
+Let us assume that we're assigning two office hours slots per TA (i.e. `oh_per_ta=2`).  In this case, the maximum preference score for TA1's two OH slots is 7 (assigning them OH1 and OH2).  If TA1 was assigned OH2 and OH3 then the schedule achieved a score of only 5.  In this case TA1's percentage max is $5/7\approx.71$.  
+
+The TA with the smallest percentage max score has the least favorable schedule, as compared to their own preferences.  Examining the minimum and mean percentage max score (printed to the command line when run) gives a sense of how favorable the matching is for TAs.
