@@ -1,5 +1,4 @@
 import re
-from datetime import datetime, timedelta
 
 import pandas as pd
 import tzlocal
@@ -7,13 +6,21 @@ from icalendar import Calendar, Event
 from pytz import timezone
 
 
-def normalize_day_of_week(date_str):
-    date_regex = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
-    match_list = [bool(re.search(pattern, date_str, re.IGNORECASE))
-                  for pattern in (date_regex)]
+def normalize_day_of_week(day_str):
+    """ extracts a day of week, as index, from a string
 
-    assert sum(match_list) < 2, f'non-unique day of week found in: {date_str}'
-    assert sum(match_list) == 1, f'no day of week found in: {date_str}'
+    Args:
+        day_str (str): string containing some day of the week
+
+    Returns:
+        day_idx (int): 0 for monday, 1 for tuesday, ...
+    """
+    date_regex = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+    match_list = [bool(re.search(pattern, day_str, re.IGNORECASE))
+                  for pattern in date_regex]
+
+    assert sum(match_list) < 2, f'non-unique day of week found in: {day_str}'
+    assert sum(match_list) == 1, f'no day of week found in: {day_str}'
 
     # return idx of first match in list
     for idx, b in enumerate(match_list):
@@ -21,8 +28,8 @@ def normalize_day_of_week(date_str):
             return idx
 
 
-def to_timedelta(time_str):
-    """ converts to timedelta, from beggining of day to time_str
+def to_time(time_str):
+    """ converts to timedelta, from beginning of day to time_str
 
     Args:
         time_str (str): comes in one of two formats: "6:30 PM" or "4 AM"
@@ -30,48 +37,92 @@ def to_timedelta(time_str):
     Returns:
         delta (timedelta): from beginning of day
     """
-    if ':' in time_str:
-        s_fmt = '%I:%M%p'
-    else:
-        s_fmt = '%I%p'
+    # Match patterns for 12-hour and 24-hour unambiguous formats
+    patterns = [
+        ('%I:%M%p', re.compile(r'\d{1,2}:\d{2}\s*(?:AM|PM)', re.IGNORECASE)),
+        ('%I%p', re.compile(r'\d{1,2}\s*(?:AM|PM)', re.IGNORECASE))
+    ]
 
-    return datetime.strptime(time_str.strip(), s_fmt).time()
+    for fmt, pattern in patterns:
+        match_list = pattern.findall(time_str)
+        match len(match_list):
+            case 0:
+                # no match found
+                continue
+            case 1:
+                # unique match found
+                s_match = match_list[0].replace(' ', '')
+                return datetime.strptime(s_match, fmt).time()
+            case _:
+                raise ValueError(f'Multiple times found: {time_str}')
+
+    raise ValueError(f"Ambiguous or invalid time string: '{time_str}'")
 
 
-def get_event(date_start, date_end, time_str, tz=None, **kwargs):
-    """ returns 1st start stop datetimes after (or on) a given date """
-    # convert date_start, date_end to date objects
+from datetime import datetime, timedelta
+
+
+def get_event_kwargs(date_start, date_end, time_str, tz=None, **kwargs):
+    """ gets weekly recurring event arguments, to be passed to Event
+
+    Args:
+        date_start (str): start date
+        date_end (str): end date
+        time_str (str): time of event, includes a start and stop seperated
+            by a '-' character.  see get_time() function for parsing info on
+            each side
+        tz (str or timezone, optional): timezone. If not provided, the local
+            timezone is used.
+        **kwargs: Additional parameters to be included in the event
+
+    Returns:
+        kwargs: dictionary to be unapcked into Event object
+
+    Raises:
+        AttributeError: event exceeds the maximum weekly repeats (53 weeks)
+    """
+    # Convert date_start, date_end to date objects
     date_start = pd.to_datetime(date_start).date()
     date_end = pd.to_datetime(date_end).date()
 
-    # move start date up to proper day of the week
+    # Move start date up to the correct weekday
     weekday, time_str = time_str.split('@')
     weekday_idx = normalize_day_of_week(weekday)
     while date_start.weekday() != weekday_idx:
         date_start += timedelta(days=1)
 
-    # convert time_str to timedelta (time since start of day)
+    # Convert time_str to timedelta (time since start of day)
     time_start, time_end = time_str.split('-')
-    time_start = to_timedelta(time_start)
-    time_end = to_timedelta(time_end)
+    time_start = to_time(time_start)
+    time_end = to_time(time_end)
 
-    # specify start and end time
+    # Handle timezone (default to local time if not provided)
     if tz is None:
         tz = tzlocal.get_localzone()
     tz = timezone(str(tz))
+
     kwargs['dtstart'] = tz.localize(datetime.combine(date_start, time_start))
     kwargs['dtend'] = tz.localize(datetime.combine(date_start, time_end))
 
-    # compute number of repeats before end date
+    # Compute the number of weekly repeats before the end date
     date = date_start
-    for repeats in range(53):
+    for repeats in range(53):  # Max 53 weekly repeats
         if date > date_end:
             break
         date = date + timedelta(weeks=1)
     else:
-        raise AttributeError(f'exceeded max weekly repeats (start: '
-                             f'{date_start} stop: {date_end})')
+        raise AttributeError(
+            f"Exceeded max weekly repeats (start: {date_start}, stop: {date_end})")
+
     kwargs['rrule'] = {'freq': 'weekly', 'count': repeats}
+
+    return kwargs
+
+
+def get_event(*args, **kwargs):
+    """ differs only from _get_event() by returning an Event (easier testing)
+    """
+    kwargs = get_event_kwargs(*args, **kwargs)
 
     # build event with proper attributes of event, may include additional
     # ones not computed above (e.g. 'summary' or 'description')
@@ -97,13 +148,3 @@ def build_calendar(oh_ta_dict, date_start, date_end):
         cal.add_component(event)
 
     return cal
-
-
-if __name__ == '__main__':
-    oh_ta_dict = {'Monday @ 6PM - 7PM': ['ta-test0', 'ta-test1']}
-    cal = build_calendar(oh_ta_dict,
-                         date_start='today',
-                         date_end='dec 4 2024')
-    with open('oh_test.ics', 'wb') as f:
-        f.write(cal.to_ical())
-
