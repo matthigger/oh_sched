@@ -7,10 +7,8 @@ import yaml
 
 
 class Config:
-    def __init__(self, f_csv, oh_per_ta=1, max_ta_per_oh=None,
-                 scale_dict=None, date_start=None, date_end=None, f_out=None,
-                 verbose=True):
-        self.f_csv = pathlib.Path(f_csv)
+    def __init__(self, oh_per_ta=1, max_ta_per_oh=None, scale_dict=None,
+                 date_start=None, date_end=None, f_out=None, verbose=True):
 
         self.oh_per_ta = int(oh_per_ta)
         assert self.oh_per_ta > 0
@@ -53,8 +51,8 @@ class Config:
 
     def to_dict(self):
         d = copy(self.__dict__)
-        d['f_csv'] = str(d['f_csv'])
-        d['f_out'] = str(d['f_out'])
+        if d['f_out'] is not None:
+            d['f_out'] = str(d['f_out'])
         return d
 
 
@@ -63,5 +61,5 @@ if __name__ == '__main__':
 
     # dump default config to test directory
     folder = pathlib.Path(oh_sched.__file__).parents[1] / 'test'
-    config = Config(f_csv='oh_prefs.csv')
+    config = Config()
     config.to_yaml(folder / 'config.yaml')

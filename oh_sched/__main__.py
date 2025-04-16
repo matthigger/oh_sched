@@ -4,8 +4,8 @@ import oh_sched
 from oh_sched.config import Config
 
 
-def main(config):
-    prefs, email_list, name_list, oh_list = oh_sched.extract_csv(config.f_csv)
+def main(f_csv, config):
+    prefs, email_list, name_list, oh_list = oh_sched.extract_csv(f_csv)
 
     if config.verbose:
         # print message about availability given by TAs
@@ -68,6 +68,8 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         description='https://github.com/matthigger/oh_sched')
+    parser.add_argument('f_csv', type=str,
+                        help='Path to the TA OH preference CSV')
     parser.add_argument('-c', '--config', type=str, default=None,
                         help='path to yaml file with configuration.  you may use (and create) a default configuration yaml by not passing this parameter')
     param = parser.parse_args()
@@ -88,4 +90,4 @@ if __name__ == '__main__':
     else:
         config = Config.from_yaml(param.config)
 
-    main(config)
+    main(param.f_csv, config)
