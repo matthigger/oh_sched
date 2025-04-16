@@ -66,20 +66,19 @@ which multiplies preferences on slots which match the regex string "Thu" by 1.1 
 # Formatting office Hours Time
 
 Office hours take place weekly during a timeslot on one day of the week.  Here are two valid examples:
-    
+```
     Mondays 3PM-4PM
     Tue 11:15am-1 Pm
-
+```
 Following either of these examples is sufficient.  Here are the gory parsing details:
 
 - The day of the week is determined by checking for the case-insensitive three letter abbreviation of the day (e.g. "thu").  See `normalize_day_of_week()` in [calendr.py](oh_sched/calendr.py)
 - Start and end times for office hours are separated by the unique appearance of '-' in the string.
 - Each starting and ending time must follow one of the two formats below:
-
-
+```
     12:15AM
     1 PM
-
+```
 which are both case / space insensitive.  See `to_time()` in [calendr.py](oh_sched/calendr.py) for details.
 
 # Percentage Max
