@@ -1,13 +1,14 @@
 # OH Sched
 
-Assigns TA offers hours to their preferences obtained via google forms.  
+Assigns TA offers hours to their preferences, which are obtained via [google forms](https://docs.google.com/forms/d/1Ro30IqZzhar8IwLEBJRv7yIQ-KsoWAMK9JTqi-_f9gc/template/preview).  
 - support for multiple TAs per Office hours slot
 - allows instructor to "nudge" preferences (e.g. preferring office hours slots just before HW deadline)
 - exports final schedule to ics file (compatiable with most calendar apps)
 
 # Installation
-
-    python3 -m pip install oh_sched
+```bash
+python3 -m pip install oh_sched
+```
 
 (Windows users swap `python` for `python3`)
 
@@ -17,16 +18,14 @@ Assigns TA offers hours to their preferences obtained via google forms.
 - Download the csv of responses
   - see [test/oh_pref.csv](test/oh_prefs.csv) for example 
 - Run the following command on the downloaded csv file
-
-
-    python3 -m oh_sched oh_pref.csv
-
-- The schedule will be printed to the command line (see [test/ex_output.txt](test/ex_output.txt) for example) and written to `oh.ics`
-  - this `ics` file is importable into most calendar apps (e.g. Google, Outlook, Apple)
-- The default configuration file, `config.yaml` will also be written locally, please modify it as needed (see following section) and re-run to account for your adjustments:
-
-
-    python3 -m oh_sched oh_pref.csv -c config.yaml
+```bash
+python3 -m oh_sched oh_pref.csv
+```
+- The schedule will be printed to the command line (see [test/ex_output.txt](test/ex_output.txt) for example) and written to `oh.ics` which can be imported into most calendar apps (e.g. Google, Outlook, Apple)
+- The default configuration file, `config.yaml` will also be written locally.  Please modify it as needed (see [configuration section](#configuration)) and re-run to account for your adjustments:
+```bash
+python3 -m oh_sched oh_pref.csv -c config.yaml
+```
 
 # Matching
 
@@ -40,9 +39,10 @@ The table below gives the preferences of two TAs for four office hours slots.  L
 By inspection, in this simple case it is best if 
 - TA0 is assigned OH0 and OH1
 - TA1 is assigned OH1 and OH2
+
 This yields a sum of assigned preferences of 4 + 3 + 3 + 4 = 14
 
-Programmatically, when `oh_per_ta=1`, one may use [scipy.optimize.linear_sum_assignment()](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linear_sum_assignment.html) to match TAs to office hours.  To solve for `oh_per_ta > 1` we use a greedy extension which iteratively assigns each TA to the available office hours slot which best suits their preferences.  (There's a bit of detail we leave out, it is necessary to repeat an office hours slot `max_ta_per_oh` times, please see [match()](oh_sched/match.py))
+Programmatically, when `oh_per_ta=1`, one may use [scipy.optimize.linear_sum_assignment()](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linear_sum_assignment.html) to match TAs to office hours.  To solve for `oh_per_ta > 1` we use a greedy extension which iteratively assigns each TA to the available office hours slot which best suits their preferences.  (There's a bit of detail we leave out here, its necessary to repeat an office hours slot `max_ta_per_oh` times in the implementation, please see [match()](oh_sched/match.py))
 
 # Configuration
 
@@ -52,16 +52,16 @@ See [test/config.yaml](test/config.yaml) for default configuration file.
 - `max_ta_per_oh`: maximum number of TAs which may be assigned to any office hours slot.  By default, no maximum is imposed and all TAs may share a single office hours slot.
 - `f_out`: name of the output ics file of your calendar (default: `oh.ics`)
 - `verbose`: toggles command line output (default: true)
-- `date_start`: the starting date (inclusive) for office hours in the output ics calendar (any format readable by [pd.to_datetime()](https://pandas.pydata.org/docs/reference/api/pandas.to_datetime.html) is fine here)
-- `date_end`: the ending date (inclusive) for office hours in the output ics calendar
+- `date_start`: the starting date (inclusive) for office hours in the output ics calendar (default: today)
+  - any format readable by [pd.to_datetime()](https://pandas.pydata.org/docs/reference/api/pandas.to_datetime.html) is fine
+- `date_end`: the ending date (inclusive) for office hours in the output ics calendar (default: a week from today)
 - `scale_dict`: allows the user to apply a multiplier to TA preferences to suit course needs.  For example, if more OH coverage is helpful on Thursday and Friday one could write:
-
-
+```yaml
     scale_dict:
       Thu: 1.1
       Fri: 1.2
-
-  which multiplies preferences on slots which match the regex string "Thu" by 1.1 and "Fri" by 1.2.  Please be mindful that the scaling magnitudes aren't so severe that they violate initial TA preferences.  Please check to ensure the output includes the scaling you intend by checking the "Scaling office hours preferences:" section of the output (see [test/ex_output.txt](test/ex_output.txt) for example).
+```
+which multiplies preferences on slots which match the regex string "Thu" by 1.1 and "Fri" by 1.2.  Please be mindful that the scaling magnitudes aren't so severe that they violate initial TA preferences.  Please check to ensure the output includes the scaling you intend by checking the "Scaling office hours preferences:" section of the output (see [test/ex_output.txt](test/ex_output.txt) for example).
 
 # Formatting office Hours Time
 
