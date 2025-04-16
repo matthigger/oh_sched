@@ -1,0 +1,90 @@
+TAs with lowest 20% of availability given:
+  8 OH slots possible: lee.christine@northeastern.edu
+  8 OH slots possible: mundra.sa@northeastern.edu
+  8 OH slots possible: ashman.a@northeastern.edu
+  9 OH slots possible: chaudary.h@northeastern.edu
+  10 OH slots possible: southard-smith.c@northeastern.edu
+  10 OH slots possible: na.ya@northeastern.edu
+  10 OH slots possible: bhakta.ru@northeastern.edu
+  12 OH slots possible: papa.is@northeastern.edu
+  12 OH slots possible: alawi.s@northeastern.edu
+  12 OH slots possible: tsai.me@northeastern.edu
+  14 OH slots possible: narayanan.v@northeastern.edu
+  14 OH slots possible: venkatapathy.a@northeastern.edu
+
+Scaling office hours preferences:
+Thursday  @ 8AM-9AM multiplied by 1.1 (cumulative scale=1.1)
+Thursday  @ 9AM-10AM multiplied by 1.1 (cumulative scale=1.1)
+Thursday  @ 10AM-11AM multiplied by 1.1 (cumulative scale=1.1)
+Thursday  @ 11AM-12PM multiplied by 1.1 (cumulative scale=1.1)
+Thursday  @ 12PM-1PM multiplied by 1.1 (cumulative scale=1.1)
+Thursday  @ 1PM-2PM multiplied by 1.1 (cumulative scale=1.1)
+Thursday  @ 2PM-3PM multiplied by 1.1 (cumulative scale=1.1)
+Thursday  @ 3PM-4PM multiplied by 1.1 (cumulative scale=1.1)
+Thursday  @ 4PM-5PM multiplied by 1.1 (cumulative scale=1.1)
+Thursday  @ 5PM-6PM multiplied by 1.1 (cumulative scale=1.1)
+Thursday  @ 6PM-7PM multiplied by 1.1 (cumulative scale=1.1)
+Thursday  @ 7PM-8PM multiplied by 1.1 (cumulative scale=1.1)
+Thursday  @ 8PM-9PM multiplied by 1.1 (cumulative scale=1.1)
+Friday  @ 8AM-9AM multiplied by 1.2 (cumulative scale=1.2)
+Friday  @ 9AM-10AM multiplied by 1.2 (cumulative scale=1.2)
+Friday  @ 10AM-11AM multiplied by 1.2 (cumulative scale=1.2)
+Friday  @ 11AM-12PM multiplied by 1.2 (cumulative scale=1.2)
+Friday  @ 12PM-1PM multiplied by 1.2 (cumulative scale=1.2)
+Friday  @ 1PM-2PM multiplied by 1.2 (cumulative scale=1.2)
+Friday  @ 2PM-3PM multiplied by 1.2 (cumulative scale=1.2)
+Friday  @ 3PM-4PM multiplied by 1.2 (cumulative scale=1.2)
+Friday  @ 4PM-5PM multiplied by 1.2 (cumulative scale=1.2)
+Friday  @ 5PM-6PM multiplied by 1.2 (cumulative scale=1.2)
+Friday  @ 6PM-7PM multiplied by 1.2 (cumulative scale=1.2)
+Friday  @ 7PM-8PM multiplied by 1.2 (cumulative scale=1.2)
+Friday  @ 8PM-9PM multiplied by 1.2 (cumulative scale=1.2)
+
+Schedule:
+Monday  @ 9AM-10AM has 1 TAs: Yanxi
+Monday  @ 1PM-2PM has 1 TAs: Ananya 
+Tuesday  @ 12PM-1PM has 1 TAs: Laasya 
+Tuesday  @ 1PM-2PM has 2 TAs: Jack, Trym
+Tuesday  @ 2PM-3PM has 2 TAs: Sankalp, Ami
+Tuesday  @ 3PM-4PM has 2 TAs: Hamza, Joey
+Wednesday  @ 9AM-10AM has 1 TAs: Salma
+Wednesday  @ 1PM-2PM has 1 TAs: Riya
+Wednesday  @ 6PM-7PM has 1 TAs: Aiyan
+Thursday  @ 8AM-9AM has 1 TAs: Lauren
+Thursday  @ 9AM-10AM has 2 TAs: Isabelle, Lily
+Thursday  @ 5PM-6PM has 1 TAs: Hana
+Thursday  @ 7PM-8PM has 1 TAs: Priyanka
+Friday  @ 8AM-9AM has 1 TAs: Yun
+Friday  @ 9AM-10AM has 4 TAs: Vasumathi, Charan, Sameer, Jayesh
+Friday  @ 10AM-11AM has 2 TAs: Harris, Amanda
+Friday  @ 11AM-12PM has 4 TAs: Sukruth, Pranav, Damyant, RG
+Friday  @ 12PM-1PM has 4 TAs: Harshal, Jenny, Prathamesh, Kate
+Friday  @ 1PM-2PM has 3 TAs: Raj , Aneri, Avery
+Friday  @ 2PM-3PM has 4 TAs: Andrew, Ronhit, Gabby, David
+Friday  @ 3PM-4PM has 4 TAs: Christine, Neha, Luke, Chaitanya
+Friday  @ 4PM-5PM has 3 TAs: Sachin, Rimsha, Sourabh
+Friday  @ 5PM-6PM has 2 TAs: xiu xiu, Katie
+Friday  @ 6PM-7PM has 1 TAs: Sai Chandra
+Friday  @ 7PM-8PM has 2 TAs: Shishir , Gillian
+Friday  @ 8PM-9PM has 5 TAs: Anisha, Akshay, Anisha, Dhananjay, Aravind
+Saturday  @ 10AM-11AM has 2 TAs: Caroline, Pruthvi
+Saturday  @ 11AM-12PM has 1 TAs: Ruhan
+Saturday  @ 5PM-6PM has 1 TAs: David
+Sunday  @ 9AM-10AM has 1 TAs: Manh
+
+Percentage Max Score :
+https://github.com/matthigger/oh_sched?tab=readme-ov-file#percentage-max
+min percentage max score: 1.0000
+mean percentage max score: 1.0000
+
+WARNING: similar emails treated as unique
+https://github.com/matthigger/oh_sched?tab=readme-ov-file#email-comparison
+kushwaha.an@northeasetern.edu vs 
+kushwaha.an@northeastern.edu
+
+zhang.david@northeastern.edu vs 
+zhang.david@northerstern.edu
+
+
+Output ics calendar file: oh.ics
+

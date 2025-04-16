@@ -96,7 +96,7 @@ def match(prefs, oh_per_ta, max_ta_per_oh=None, shuffle=True, seed=0):
     return oh_ta_match
 
 
-def get_scale(oh_list, scale_dict):
+def get_scale(oh_list, scale_dict, verbose=True):
     """ associates each scaling factor to all matching office hours in oh_list
 
     Args:
@@ -104,16 +104,20 @@ def get_scale(oh_list, scale_dict):
         scale_dict (dict): keys are regex which match any relevant office
             hours, values are multiplicative factors to adjust preferences
             in these hours by
+        verbose (bool): toggles command line output
 
     Returns:
         scale (np.array): scaling factor for every office hours slot
     """
+    if verbose:
+        print('\nScaling office hours preferences:')
     scale = np.ones(len(oh_list))
     for regex, mult in scale_dict.items():
         for oh_idx, oh in enumerate(oh_list):
             if re.search(regex, oh):
                 # multiplier is applicable to this office hours slot
                 scale[oh_idx] *= mult
+                print(f'{oh} multiplied by {mult} (cumulative scale={scale[oh_idx]})')
     return scale
 
 

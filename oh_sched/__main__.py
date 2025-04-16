@@ -19,7 +19,8 @@ def main(f_csv, config):
     # scale per day
     if config.scale_dict is not None:
         prefs = prefs * oh_sched.get_scale(oh_list,
-                                           scale_dict=config.scale_dict)
+                                           scale_dict=config.scale_dict,
+                                           verbose=config.verbose)
 
     # match
     oh_ta_match = oh_sched.match(prefs,
@@ -49,22 +50,20 @@ def main(f_csv, config):
         print(
             'https://github.com/matthigger/oh_sched?tab=readme-ov-file#percentage-max')
         print(f'min percentage max score: {perc_max.min():.4f}')
-        print(f'mean percentage max score: {perc_max.mean():.4f}')
+        print(f'mean percentage max score: {perc_max.mean():.4f}\n')
 
     # warn on similar emails
     email_tup_list = list(find_similar_str(email_list, max_distance=2))
     if email_tup_list:
-        print('\nWARNING: similar emails treated as unique (see https://github.com/matthigger/oh_sched?tab=readme-ov-file#email-comparison')
+        print('WARNING: similar emails treated as unique')
+        print('https://github.com/matthigger/oh_sched?tab=readme-ov-file#email-comparison')
         for email0, email1 in email_tup_list:
-            print(f'{email0} vs \n{email1}\n\n')
+            print(f'{email0} vs \n{email1}\n')
+        print('')
 
     if config.f_out is not None:
         if config.verbose:
-            print(f'\noutput ics file, maybe be imported to calendar apps: '
-                  f'{config.f_out}')
-        else:
-            print('\npass f_out to create ics file, importable to calendar '
-                  'apps')
+            print(f'Output ics calendar file: {config.f_out}\n')
 
         with open(config.f_out, 'wb') as f:
             f.write(cal.to_ical())
