@@ -2,6 +2,7 @@ import numpy as np
 
 import oh_sched
 from oh_sched.config import Config
+from oh_sched.email import find_similar_str
 
 
 def main(f_csv, config):
@@ -37,18 +38,25 @@ def main(f_csv, config):
 
     if config.verbose:
         # print TAs per slot
-        print('Schedule:')
+        print('\nSchedule:')
         for oh, ta_list in oh_ta_dict.items():
             if not len(ta_list):
                 continue
 
             print(f'{oh} has {len(ta_list)} TAs: {', '.join(ta_list)}')
 
-        print('Percentage Max Score :')
+        print('\nPercentage Max Score :')
         print(
             'https://github.com/matthigger/oh_sched?tab=readme-ov-file#percentage-max')
         print(f'min percentage max score: {perc_max.min():.4f}')
         print(f'mean percentage max score: {perc_max.mean():.4f}')
+
+    # warn on similar emails
+    email_tup_list = list(find_similar_str(email_list, max_distance=2))
+    if email_tup_list:
+        print('\nWARNING: similar emails treated as unique (see https://github.com/matthigger/oh_sched?tab=readme-ov-file#email-comparison')
+        for email0, email1 in email_tup_list:
+            print(f'{email0} vs \n{email1}\n\n')
 
     if config.f_out is not None:
         if config.verbose:
