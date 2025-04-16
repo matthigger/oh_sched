@@ -8,7 +8,7 @@ import yaml
 
 class Config:
     def __init__(self, oh_per_ta=1, max_ta_per_oh=None, scale_dict=None,
-                 date_start=None, date_end=None, f_out=None, verbose=True):
+                 date_start=None, date_end=None, f_out='oh.ics', verbose=True):
 
         self.oh_per_ta = int(oh_per_ta)
         assert self.oh_per_ta > 0
