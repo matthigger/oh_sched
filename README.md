@@ -36,3 +36,7 @@ To quantify the quality of the matching, we compute a percentage maximum score f
 Let us assume that we're assigning two office hours slots per TA (i.e. `oh_per_ta=2`).  In this case, the maximum preference score for TA1's two OH slots is 7 (assigning them OH1 and OH2).  If TA1 was assigned OH2 and OH3 then the schedule achieved a score of only 5.  In this case TA1's percentage max is $5/7\approx.71$.  
 
 The TA with the smallest percentage max score has the least favorable schedule, as compared to their own preferences.  Examining the minimum and mean percentage max score (printed to the command line when run) gives a sense of how favorable the matching is for TAs.
+
+# Email Comparison
+
+The software will take the latest TA preference, allowing TAs to update their preferences as desired.  One challenge here is that a typo on entering their email a second (or first) time would have the software treat each entry as belonging to a unique TA.  To mitigate this, we throw a warning when two emails are sufficiently similar (Levenshtein distance of 2 or less).  Other than warning, no adjustment is made by the software.  Should you receive this warning, please check the input CSV for this kind of error and manually edit and re-run as needed.
