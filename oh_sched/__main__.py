@@ -44,7 +44,8 @@ def main(f_csv, config):
             if not len(ta_list):
                 continue
 
-            print(f'{oh} has {len(ta_list)} TAs: {', '.join(ta_list)}')
+            ta_csv = ', '.join(ta_list)
+            print(f'{oh} has {len(ta_list)} TAs: {ta_csv}')
 
         print('\nPercentage Max Score :')
         print(
