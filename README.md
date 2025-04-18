@@ -1,6 +1,6 @@
 # OH Sched
 
-Assigns TA offers hours to their preferences, which are obtained via [google forms](https://docs.google.com/forms/d/1Ro30IqZzhar8IwLEBJRv7yIQ-KsoWAMK9JTqi-_f9gc/template/preview).  
+Assigns TA offers hours to their preferences, which are obtained via [google forms](https://docs.google.com/forms/d/1Wm82XnLux83t3pZvLMcAhuiJZKEEsbs4kcqXnotI5bs/template/preview).  
 - support for multiple TAs per Office hours slot
 - allows instructor to "nudge" preferences (e.g. preferring office hours slots just before HW deadline)
 - exports final schedule to ics file (compatiable with most calendar apps)
@@ -13,7 +13,7 @@ python3 -m pip install oh_sched
 (Windows users swap `python` for `python3`)
 
 # Usage
-- Ask all TAs to fill out a [google form](https://docs.google.com/forms/d/1Ro30IqZzhar8IwLEBJRv7yIQ-KsoWAMK9JTqi-_f9gc/template/preview) with their office hours preferences
+- Ask all TAs to fill out a [google form](https://docs.google.com/forms/d/1Wm82XnLux83t3pZvLMcAhuiJZKEEsbs4kcqXnotI5bs/template/preview) with their office hours preferences
   - (please modify this template as needed, see [Formatting Office Hours Time](#formatting-office-hours-time))
 - Download the csv of responses
   - see [test/oh_pref.csv](test/oh_prefs.csv) for example 
