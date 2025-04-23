@@ -3,12 +3,14 @@ import pathlib
 from copy import copy
 from datetime import datetime, timedelta
 
+import pytz
 import yaml
 
 
 class Config:
     def __init__(self, oh_per_ta=1, max_ta_per_oh=None, scale_dict=None,
-                 date_start=None, date_end=None, f_out='oh.ics', verbose=True):
+                 date_start=None, date_end=None, f_out='oh.ics',
+                 tz=None, verbose=True):
 
         self.oh_per_ta = int(oh_per_ta)
         assert self.oh_per_ta > 0
@@ -36,6 +38,13 @@ class Config:
         if self.f_out is not None:
             self.f_out = pathlib.Path(self.f_out)
             assert self.f_out.parent.exists()
+
+        self.tz = tz
+        if self.tz is None:
+            self.tz = 'US/Eastern'
+        else:
+            if self.tz not in pytz.all_timezones:
+                raise AttributeError(f'timezone not found in IANA database')
 
         self.verbose = bool(verbose)
 
