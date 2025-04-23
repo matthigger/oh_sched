@@ -106,7 +106,7 @@ def get_event_kwargs(date_start, date_end, time_str, tz=None, **kwargs):
 
     # Compute the number of weekly repeats before the end date
     date = date_start
-    for repeats in range(53):  # Max 53 weekly repeats
+    for repeats in range(52):  # Max 52 weekly repeats
         if date > date_end:
             break
         date = date + timedelta(weeks=1)
@@ -133,7 +133,7 @@ def get_event(*args, **kwargs):
     return event
 
 
-def build_calendar(oh_ta_dict, date_start, date_end):
+def build_calendar(oh_ta_dict, date_start, date_end, **kwargs):
     """  builds a calendar, a set of events, from oh_ta_dict
 
     Args:
@@ -157,7 +157,8 @@ def build_calendar(oh_ta_dict, date_start, date_end):
         event = get_event(summary=summary,
                           date_start=date_start,
                           date_end=date_end,
-                          time_str=time_str)
+                          time_str=time_str,
+                          **kwargs)
         cal.add_component(event)
 
     return cal

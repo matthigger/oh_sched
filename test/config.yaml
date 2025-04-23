@@ -1,7 +1,8 @@
-date_end: Apr 23 2025
-date_start: Apr 16 2025
-f_out: 'oh.ics'
+date_end: Apr 30 2025
+date_start: Apr 23 2025
+f_out: oh.ics
 max_ta_per_oh: null
 oh_per_ta: 1
 scale_dict: null
+tz: US/Eastern
 verbose: true

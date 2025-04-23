@@ -35,7 +35,8 @@ def main(f_csv, config):
                   for oh, ta_list in enumerate(oh_ta_match)}
     cal = oh_sched.build_calendar(oh_ta_dict,
                                   date_start=config.date_start,
-                                  date_end=config.date_end)
+                                  date_end=config.date_end,
+                                  tz=config.tz)
 
     if config.verbose:
         # print TAs per slot
