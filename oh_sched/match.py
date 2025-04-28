@@ -37,8 +37,6 @@ def match(prefs, oh_per_ta, max_ta_per_oh=None, shuffle=True, seed=0):
     oh_ta_match = [list() for _ in range(num_oh)]
 
     if max_ta_per_oh is None:
-        warnings.warn('max_ta_per_oh not given, all TAs may be assigned to '
-                      'single OH slot')
         max_ta_per_oh = num_ta
 
     # init random number generator
