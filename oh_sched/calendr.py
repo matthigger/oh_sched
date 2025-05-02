@@ -1,9 +1,120 @@
 import re
+from datetime import datetime, timedelta
+from functools import total_ordering
 
 import pandas as pd
 import tzlocal
 from icalendar import Calendar, Event
 from pytz import timezone
+import numpy as np
+
+@total_ordering
+class OfficeHour:
+    def __init__(self, name):
+        self.day_idx = normalize_day_of_week(name)
+        time_start, time_end = name.split('-')
+        self.time_start = to_time(time_start)
+        self.time_end = to_time(time_end)
+        self.name = name
+
+    def to_tuple(self):
+        return self.day_idx, self.time_start, self.time_end
+
+    def __str__(self):
+        return f'OfficeHour({self.name})'
+
+    def __lt__(self, other):
+        return self.to_tuple() < other.to_tuple()
+
+    def __eq__(self, other):
+        return self.to_tuple() == other.to_tuple()
+
+    def intersects(self, other):
+        if self.day_idx != other.day_idx:
+            # different days, can't intersect
+            return False
+
+        if self < other:
+            # self begins first (or at same time)
+            return self.time_end > other.time_start
+        else:
+            # other begins first (or at same time)
+            return other.time_end > self.time_start
+
+    def get_event_kwargs(self, date_start, date_end, tz=None, **kwargs):
+        """ gets weekly recurring event arguments, to be passed to Event
+
+        Args:
+            date_start (str): start date
+            date_end (str): end date
+            tz (str or timezone, optional): timezone. If not given, the local
+                timezone is used.
+            **kwargs: Additional parameters to be included in the event
+
+        Returns:
+            kwargs: dictionary to be unapcked into Event object
+
+        Raises:
+            AttributeError: event exceeds the maximum weekly repeats (53 weeks)
+        """
+        # Convert date_start, date_end to date objects
+        date_start = pd.to_datetime(date_start).date()
+        date_end = pd.to_datetime(date_end).date()
+
+        # Move start date up to the correct weekday
+        while date_start.weekday() != self.day_idx:
+            date_start += timedelta(days=1)
+
+        # Handle timezone (default to local time if not provided)
+        if tz is None:
+            tz = tzlocal.get_localzone()
+        tz = timezone(str(tz))
+
+        # build output starts / ends
+        dtstart = datetime.combine(date_start, self.time_start)
+        kwargs['dtstart'] = tz.localize(dtstart)
+        dtend = datetime.combine(date_start, self.time_end)
+        kwargs['dtend'] = tz.localize(dtend)
+
+        # Compute the number of weekly repeats before the end date
+        date = date_start
+        for repeats in range(52):
+            if date > date_end:
+                break
+            date = date + timedelta(weeks=1)
+        else:
+            raise AttributeError(f'> 1 yr event: {date_start} to {date_end}')
+
+        kwargs['rrule'] = {'freq': 'weekly', 'count': repeats}
+
+        return kwargs
+
+
+def get_intersection_dict(oh_list):
+    # order office hours (from earliest to latest in the day)
+    _oh_list = [OfficeHour(oh) for oh in oh_list]
+    idx_map = np.argsort(_oh_list)
+    _oh_list.sort()
+
+    # find intersections (initialize with reflexivity)
+    oh_int_dict = {idx: [idx] for idx in range(len(oh_list))}
+    for idx0, oh0 in enumerate(_oh_list):
+        for _idx1, oh1 in enumerate(_oh_list[idx0 + 1:]):
+            # idx1 is consistent with ordering of _oh_list
+            idx1 = _idx1 + idx0 + 1
+            if oh0.intersects(oh1):
+                oh_int_dict[idx0].append(idx1)
+                oh_int_dict[idx1].append(idx0)
+            else:
+                # oh0 is before oh1, if oh0 doesn't intersect oh1 it can't
+                # intersect any which come after it in _oh_list, its sorted
+                break
+
+    # map from indexing of _oh_list back to given oh_list indexing
+    oh_int_dict = {idx_map[k]: [idx_map[_v] for _v in v]
+                   for k, v in oh_int_dict.items()}
+
+    return oh_int_dict
 
 
 def normalize_day_of_week(day_str):
@@ -26,6 +137,7 @@ def normalize_day_of_week(day_str):
     for idx, b in enumerate(match_list):
         if b:
             return idx
+    return None
 
 
 def to_time(time_str):
@@ -56,81 +168,7 @@ def to_time(time_str):
             case _:
                 raise ValueError(f'Multiple times found: {time_str}')
 
-    raise ValueError(f"Ambiguous or invalid time string: '{time_str}'")
-
-
-from datetime import datetime, timedelta
-
-
-def get_event_kwargs(date_start, date_end, time_str, tz=None, **kwargs):
-    """ gets weekly recurring event arguments, to be passed to Event
-
-    Args:
-        date_start (str): start date
-        date_end (str): end date
-        time_str (str): time of event, includes a start and stop seperated
-            by a '-' character.  see get_time() function for parsing info on
-            each side
-        tz (str or timezone, optional): timezone. If not provided, the local
-            timezone is used.
-        **kwargs: Additional parameters to be included in the event
-
-    Returns:
-        kwargs: dictionary to be unapcked into Event object
-
-    Raises:
-        AttributeError: event exceeds the maximum weekly repeats (53 weeks)
-    """
-    # Convert date_start, date_end to date objects
-    date_start = pd.to_datetime(date_start).date()
-    date_end = pd.to_datetime(date_end).date()
-
-    # Move start date up to the correct weekday
-    weekday, time_str = time_str.split('@')
-    weekday_idx = normalize_day_of_week(weekday)
-    while date_start.weekday() != weekday_idx:
-        date_start += timedelta(days=1)
-
-    # Convert time_str to timedelta (time since start of day)
-    time_start, time_end = time_str.split('-')
-    time_start = to_time(time_start)
-    time_end = to_time(time_end)
-
-    # Handle timezone (default to local time if not provided)
-    if tz is None:
-        tz = tzlocal.get_localzone()
-    tz = timezone(str(tz))
-
-    kwargs['dtstart'] = tz.localize(datetime.combine(date_start, time_start))
-    kwargs['dtend'] = tz.localize(datetime.combine(date_start, time_end))
-
-    # Compute the number of weekly repeats before the end date
-    date = date_start
-    for repeats in range(52):  # Max 52 weekly repeats
-        if date > date_end:
-            break
-        date = date + timedelta(weeks=1)
-    else:
-        raise AttributeError(
-            f"Exceeded max weekly repeats (start: {date_start}, stop: {date_end})")
-
-    kwargs['rrule'] = {'freq': 'weekly', 'count': repeats}
-
-    return kwargs
-
-
-def get_event(*args, **kwargs):
-    """ differs only from _get_event() by returning an Event (easier testing)
-    """
-    kwargs = get_event_kwargs(*args, **kwargs)
-
-    # build event with proper attributes of event, may include additional
-    # ones not computed above (e.g. 'summary' or 'description')
-    event = Event()
-    for key, val in kwargs.items():
-        event.add(key, val)
-
-    return event
+    raise ValueError(f'Ambiguous or invalid time string: "{time_str}"')
 
 
 def build_calendar(oh_ta_dict, date_start, date_end, **kwargs):
@@ -148,17 +186,21 @@ def build_calendar(oh_ta_dict, date_start, date_end, **kwargs):
         cal (Calendar): ready to be exported to ics format
     """
     cal = Calendar()
-    for time_str, ta_list in oh_ta_dict.items():
+    for oh_name, ta_list in oh_ta_dict.items():
         if not ta_list:
             # skip oh slots without any TAs
             continue
         ta_list = [ta.capitalize() for ta in sorted(ta_list)]
         summary = ', '.join(sorted(ta_list))
-        event = get_event(summary=summary,
-                          date_start=date_start,
-                          date_end=date_end,
-                          time_str=time_str,
-                          **kwargs)
-        cal.add_component(event)
+
+        oh = OfficeHour(name=oh_name)
+        _kwargs = oh.get_event_kwargs(summary=summary,
+                                     date_start=date_start,
+                                     date_end=date_end,
+                                     **kwargs)
+
+        # build event with proper attributes of event,
+        _kwargs = kwargs | _kwargs
+        cal.add_component(Event(**_kwargs))
 
     return cal

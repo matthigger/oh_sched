@@ -1,22 +1,21 @@
+import tempfile
+
 from oh_sched.__main__ import *
 from oh_sched.config import *
 
 
 def test_main():
+    # paths
     folder = pathlib.Path(oh_sched.__file__).parents[1] / 'test'
+    f_csv = folder / 'oh_prefs.csv'
+    f_out = tempfile.NamedTemporaryFile(suffix='.ics')
+    f_out = pathlib.Path(f_out.name)
 
-    # default config, but swap in test folder
-    config = Config(f_out='oh.ics')
-    config.f_out = folder / config.f_out
+    config = Config(f_out=f_out)
+    main(f_csv=f_csv, config=config)
 
-    if config.f_out.exists() and config.f_out.is_file():
+    assert f_out.exists()
+
+    if f_out.exists() and f_out.is_file():
         # clean up output
-        config.f_out.unlink()
-
-    main(f_csv=folder / 'oh_prefs.csv', config=config)
-
-    assert config.f_out.exists()
-
-    if config.f_out.exists() and config.f_out.is_file():
-        # clean up output
-        config.f_out.unlink()
+        f_out.unlink()
