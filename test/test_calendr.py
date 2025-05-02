@@ -5,6 +5,33 @@ import pytest
 from oh_sched.calendr import *
 
 
+def test_get_intersection_dict():
+    oh_list = [
+        'Tue09:00AM-10:00AM',  # 0 — different day, no overlap
+        'Mon09:30AM-10:30AM',  # 1 — overlaps with 3
+        'Mon12:00PM-01:00PM virtual',  # 2 — overlaps with 5
+        'Mon09:00AM-10:00AM',  # 3 — overlaps with 1
+        'Mon10:30AM-11:30AM',  # 4 — no overlap (adjacent to 1)
+        'Mon12:00PM-1:00PM in person'  # 5 — overlaps with 2
+    ]
+
+    oh_int_dict = get_intersection_dict(oh_list)
+
+    oh_int_dict_exp = {
+        0: [0],
+        1: [1, 3],
+        2: [2, 5],
+        3: [3, 1],
+        4: [4],
+        5: [5, 2]
+    }
+
+    # convert list values to sets to avoid order issues in comparisons
+    oh_int_dict = {k: set(v) for k, v in oh_int_dict.items()}
+    oh_int_dict_exp = {k: set(v) for k, v in oh_int_dict_exp.items()}
+    assert oh_int_dict == oh_int_dict_exp
+
+
 def test_normalize_day_of_week():
     # Valid cases
     assert normalize_day_of_week('Mon meeting') == 0

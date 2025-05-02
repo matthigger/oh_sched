@@ -6,7 +6,7 @@ import pandas as pd
 import tzlocal
 from icalendar import Calendar, Event
 from pytz import timezone
-
+import numpy as np
 
 @total_ordering
 class OfficeHour:
@@ -19,6 +19,9 @@ class OfficeHour:
 
     def to_tuple(self):
         return self.day_idx, self.time_start, self.time_end
+
+    def __str__(self):
+        return f'OfficeHour({self.name})'
 
     def __lt__(self, other):
         return self.to_tuple() < other.to_tuple()
@@ -90,12 +93,15 @@ class OfficeHour:
 def get_intersection_dict(oh_list):
     # order office hours (from earliest to latest in the day)
     _oh_list = [OfficeHour(oh) for oh in oh_list]
+    idx_map = np.argsort(_oh_list)
     _oh_list.sort()
 
     # find intersections (initialize with reflexivity)
     oh_int_dict = {idx: [idx] for idx in range(len(oh_list))}
     for idx0, oh0 in enumerate(_oh_list):
-        for idx1, oh1 in enumerate(_oh_list[idx0 + 1:]):
+        for _idx1, oh1 in enumerate(_oh_list[idx0 + 1:]):
+            # idx1 is consistent with ordering of _oh_list
+            idx1 = _idx1 + idx0 + 1
             if oh0.intersects(oh1):
                 oh_int_dict[idx0].append(idx1)
                 oh_int_dict[idx1].append(idx0)
@@ -103,6 +109,10 @@ def get_intersection_dict(oh_list):
                 # oh0 is before oh1, if oh0 doesn't intersect oh1 it can't
                 # intersect any which come after it in _oh_list, its sorted
                 break
+
+    # map from indexing of _oh_list back to given oh_list indexing
+    oh_int_dict = {idx_map[k]: [idx_map[_v] for _v in v]
+                   for k, v in oh_int_dict.items()}
 
     return oh_int_dict
 
