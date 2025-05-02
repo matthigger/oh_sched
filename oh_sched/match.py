@@ -12,7 +12,8 @@ INVALID = -1
 STD_SCALE_NOISE = .00001
 
 
-def match(prefs, oh_per_ta, max_ta_per_oh=None, shuffle=True, seed=0):
+def match(prefs, oh_per_ta, max_ta_per_oh=None, oh_int_dict=None, shuffle=True,
+          seed=0):
     """ matches TA to OH slot to maximize sum of prefs achieved
 
     Args:
@@ -20,6 +21,10 @@ def match(prefs, oh_per_ta, max_ta_per_oh=None, shuffle=True, seed=0):
             combination of ta and oh.  nan where unavailable
         oh_per_ta (int): office hours assigned per ta
         max_ta_per_oh (int): maximum ta assigned to any particular oh
+        oh_int_dict (dict): keys are oh index, values are a list of all oh
+            indexes (including itself) which intersect (overlap).  See
+            get_intersection_dict().  if None passed, each oh only overlaps
+            itself
         shuffle (bool): toggles shuffling of tie breaking (seems to prefer
             earlier ta_idx)
         seed: given to shuffling
@@ -38,6 +43,10 @@ def match(prefs, oh_per_ta, max_ta_per_oh=None, shuffle=True, seed=0):
 
     if max_ta_per_oh is None:
         max_ta_per_oh = num_ta
+
+    if oh_int_dict is None:
+        # each office hour only intersects itself
+        oh_int_dict = {idx: [idx] for idx in range(num_oh)}
 
     # init random number generator
     rng = np.random.default_rng(seed=seed)
@@ -82,11 +91,12 @@ def match(prefs, oh_per_ta, max_ta_per_oh=None, shuffle=True, seed=0):
             oh_idx = oh_ta_match.index(_oh_ta_match[_oh_idx])
 
             # mark this spot as invalid for this TA
-            prefs[_ta_idx, oh_idx] = INVALID
+            for idx in oh_int_dict[oh_idx]:
+                prefs[_ta_idx, idx] = INVALID
 
     # count oh per ta
     _oh_per_ta, _ = np.histogram(list(chain.from_iterable(oh_ta_match)),
-                                 bins=np.arange(-.5, num_ta+.5))
+                                 bins=np.arange(-.5, num_ta + .5))
     if (_oh_per_ta != oh_per_ta).any():
         warnings.warn(f'not enough OH slots & preferences given to'
                       f' assign all TAs {oh_per_ta} OH slots')
@@ -115,7 +125,8 @@ def get_scale(oh_list, scale_dict, verbose=True):
             if re.search(regex, oh):
                 # multiplier is applicable to this office hours slot
                 scale[oh_idx] *= mult
-                print(f'{oh} multiplied by {mult} (cumulative scale={scale[oh_idx]})')
+                print(
+                    f'{oh} multiplied by {mult} (cumulative scale={scale[oh_idx]})')
     return scale
 
 
