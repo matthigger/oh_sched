@@ -1,6 +1,7 @@
 import numpy as np
 
 import oh_sched
+from oh_sched import get_intersection_dict
 from oh_sched.config import Config
 from oh_sched.email import find_similar_str
 
@@ -23,7 +24,9 @@ def main(f_csv, config):
                                            verbose=config.verbose)
 
     # match
+    oh_int_dict = get_intersection_dict(oh_list)
     oh_ta_match = oh_sched.match(prefs,
+                                 oh_int_dict=oh_int_dict,
                                  oh_per_ta=config.oh_per_ta,
                                  max_ta_per_oh=config.max_ta_per_oh)
 
@@ -55,7 +58,8 @@ def main(f_csv, config):
     email_tup_list = list(find_similar_str(email_list, max_distance=2))
     if email_tup_list:
         print('WARNING: similar emails treated as unique')
-        print('https://github.com/matthigger/oh_sched?tab=readme-ov-file#email-comparison')
+        print(
+            'https://github.com/matthigger/oh_sched?tab=readme-ov-file#email-comparison')
         for email0, email1 in email_tup_list:
             print(f'{email0} vs \n{email1}\n')
         print('')

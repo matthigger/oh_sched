@@ -122,3 +122,14 @@ def test_match():
     s_warn = 'not enough OH slots & preferences given to assign all TAs 2 OH slots'
     with pytest.warns(UserWarning, match=s_warn):
         match(prefs, oh_per_ta=2, max_ta_per_oh=1, shuffle=False)
+
+    # case 9: avoids intersections (assigning oh0 and oh1 has highest score,
+    # but these two slots intersect each other)
+    prefs = np.array([
+        [9, 9, 1],
+    ])
+    oh_int_dict = {0: [0, 1], 1: [1, 0], 2: [2]}
+    oh_ta_match = match(prefs, oh_int_dict=oh_int_dict, oh_per_ta=2,
+                        max_ta_per_oh=1, shuffle=False)
+    oh_ta_match_exp = [[0], [], [0]]
+    assert oh_ta_match == oh_ta_match_exp
