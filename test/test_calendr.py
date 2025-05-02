@@ -55,10 +55,10 @@ def check_datetime_equal(dt1, dt2):
 def test_get_event_kwargs():
     # Case 1: Normal weekly event in UTC
     tz = timezone('UTC')
-    kwargs = get_event_kwargs(
+    oh = OfficeHour('Tue@9:00 AM-10:00 AM')
+    kwargs = oh.get_event_kwargs(
         date_start='2025-04-01',  # Tuesday
         date_end='2025-05-01',
-        time_str='Tue@9:00 AM-10:00 AM',
         tz=tz,
         summary='Test Event'
     )
@@ -72,10 +72,10 @@ def test_get_event_kwargs():
     assert kwargs['summary'] == 'Test Event'
 
     # Case 2: Start date not on target weekday (Wed -> next Mon)
-    kwargs = get_event_kwargs(
+    oh = OfficeHour('Mon@6:00 PM-7:00 PM')
+    kwargs = oh.get_event_kwargs(
         date_start='2025-04-02',  # Wednesday
         date_end='2025-04-20',
-        time_str='Mon@6:00 PM-7:00 PM',
         tz=tz,
     )
     assert kwargs['dtstart'] == tz.localize(datetime(2025, 4, 7, 18, 0))
@@ -83,20 +83,20 @@ def test_get_event_kwargs():
     assert kwargs['rrule'] == {'freq': 'weekly', 'count': 2}
 
     # Case 3: Uses local timezone if not provided
-    kwargs = get_event_kwargs(
+    oh = OfficeHour('Tue@12:00 PM-1:00 PM')
+    kwargs = oh.get_event_kwargs(
         date_start='2025-04-01',
-        date_end='2025-04-30',
-        time_str='Tue@12:00 PM-1:00 PM'
+        date_end='2025-04-30'
     )
     assert kwargs['dtstart'].tzinfo is not None
     assert kwargs['dtend'].tzinfo is not None
     assert kwargs['rrule']['count'] == 5
 
     # Case 4: Raises error on exceeding repeat limit
+    oh = OfficeHour('Sun@1:00 AM-2:00 AM')
     with pytest.raises(AttributeError):
-        get_event_kwargs(
+        oh.get_event_kwargs(
             date_start='2023-01-01',
             date_end='2025-01-01',
-            time_str='Sun@1:00 AM-2:00 AM',
             tz=tz
         )
