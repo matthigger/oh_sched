@@ -31,11 +31,11 @@ class OfficeHour:
             # different days, can't intersect
             return False
 
-        if self > other:
-            # self is first
+        if self < other:
+            # self begins first (or at same time)
             return self.time_end > other.time_start
         else:
-            # other is first
+            # other begins first (or at same time)
             return other.time_end > self.time_start
 
     def get_event_kwargs(self, date_start, date_end, tz=None, **kwargs):

@@ -52,51 +52,85 @@ def check_datetime_equal(dt1, dt2):
     return dt1.replace(tzinfo=None) == dt2.replace(tzinfo=None)
 
 
-def test_get_event_kwargs():
-    # Case 1: Normal weekly event in UTC
-    tz = timezone('UTC')
-    oh = OfficeHour('Tue@9:00 AM-10:00 AM')
-    kwargs = oh.get_event_kwargs(
-        date_start='2025-04-01',  # Tuesday
-        date_end='2025-05-01',
-        tz=tz,
-        summary='Test Event'
-    )
+class TestOfficeHour:
+    def test_to_tuple(self):
+        oh = OfficeHour('Mon09:00AM-10:00AM')
+        assert oh.to_tuple() == (0, time(9, 0), time(10, 0))
 
-    expected_dtstart = tz.localize(datetime(2025, 4, 1, 9, 0))
-    expected_dtend = tz.localize(datetime(2025, 4, 1, 10, 0))
+    def test_lt(self):
+        oh1 = OfficeHour('Mon09:00AM-10:00AM')
+        oh2 = OfficeHour('Mon10:00AM-11:00AM')
+        assert oh1 < oh2
+        assert not (oh2 < oh1)
 
-    assert kwargs['dtstart'] == expected_dtstart
-    assert kwargs['dtend'] == expected_dtend
-    assert kwargs['rrule'] == {'freq': 'weekly', 'count': 5}
-    assert kwargs['summary'] == 'Test Event'
+    def test_eq(self):
+        oh1 = OfficeHour('Mon09:00AM-10:00AM')
+        oh2 = OfficeHour('Mon9AM-10AM')
+        oh3 = OfficeHour('Mon10:00AM-11:00AM')
+        assert oh1 == oh2
+        assert oh1 != oh3
 
-    # Case 2: Start date not on target weekday (Wed -> next Mon)
-    oh = OfficeHour('Mon@6:00 PM-7:00 PM')
-    kwargs = oh.get_event_kwargs(
-        date_start='2025-04-02',  # Wednesday
-        date_end='2025-04-20',
-        tz=tz,
-    )
-    assert kwargs['dtstart'] == tz.localize(datetime(2025, 4, 7, 18, 0))
-    assert kwargs['dtend'] == tz.localize(datetime(2025, 4, 7, 19, 0))
-    assert kwargs['rrule'] == {'freq': 'weekly', 'count': 2}
+    def test_intersects(self):
+        # Same day, overlapping
+        oh1 = OfficeHour('Mon09:00AM-10:30AM')
+        oh2 = OfficeHour('Mon10:00AM-11:00AM')
+        assert oh1.intersects(oh2)
+        assert oh2.intersects(oh1)
 
-    # Case 3: Uses local timezone if not provided
-    oh = OfficeHour('Tue@12:00 PM-1:00 PM')
-    kwargs = oh.get_event_kwargs(
-        date_start='2025-04-01',
-        date_end='2025-04-30'
-    )
-    assert kwargs['dtstart'].tzinfo is not None
-    assert kwargs['dtend'].tzinfo is not None
-    assert kwargs['rrule']['count'] == 5
+        # Same day, no overlap
+        oh3 = OfficeHour('Mon11:00AM-12:00PM')
+        assert not oh1.intersects(oh3)
+        assert not oh3.intersects(oh1)
 
-    # Case 4: Raises error on exceeding repeat limit
-    oh = OfficeHour('Sun@1:00 AM-2:00 AM')
-    with pytest.raises(AttributeError):
-        oh.get_event_kwargs(
-            date_start='2023-01-01',
-            date_end='2025-01-01',
-            tz=tz
+        # Different days
+        oh4 = OfficeHour('Tue09:00AM-10:00AM')
+        assert not oh1.intersects(oh4)
+
+    def test_get_event_kwargs(self):
+        # Case 1: Normal weekly event in UTC
+        tz = timezone('UTC')
+        oh = OfficeHour('Tue@9:00 AM-10:00 AM')
+        kwargs = oh.get_event_kwargs(
+            date_start='2025-04-01',  # Tuesday
+            date_end='2025-05-01',
+            tz=tz,
+            summary='Test Event'
         )
+
+        expected_dtstart = tz.localize(datetime(2025, 4, 1, 9, 0))
+        expected_dtend = tz.localize(datetime(2025, 4, 1, 10, 0))
+
+        assert kwargs['dtstart'] == expected_dtstart
+        assert kwargs['dtend'] == expected_dtend
+        assert kwargs['rrule'] == {'freq': 'weekly', 'count': 5}
+        assert kwargs['summary'] == 'Test Event'
+
+        # Case 2: Start date not on target weekday (Wed -> next Mon)
+        oh = OfficeHour('Mon@6:00 PM-7:00 PM')
+        kwargs = oh.get_event_kwargs(
+            date_start='2025-04-02',  # Wednesday
+            date_end='2025-04-20',
+            tz=tz,
+        )
+        assert kwargs['dtstart'] == tz.localize(datetime(2025, 4, 7, 18, 0))
+        assert kwargs['dtend'] == tz.localize(datetime(2025, 4, 7, 19, 0))
+        assert kwargs['rrule'] == {'freq': 'weekly', 'count': 2}
+
+        # Case 3: Uses local timezone if not provided
+        oh = OfficeHour('Tue@12:00 PM-1:00 PM')
+        kwargs = oh.get_event_kwargs(
+            date_start='2025-04-01',
+            date_end='2025-04-30'
+        )
+        assert kwargs['dtstart'].tzinfo is not None
+        assert kwargs['dtend'].tzinfo is not None
+        assert kwargs['rrule']['count'] == 5
+
+        # Case 4: Raises error on exceeding repeat limit
+        oh = OfficeHour('Sun@1:00 AM-2:00 AM')
+        with pytest.raises(AttributeError):
+            oh.get_event_kwargs(
+                date_start='2023-01-01',
+                date_end='2025-01-01',
+                tz=tz
+            )
