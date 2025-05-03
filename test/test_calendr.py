@@ -7,12 +7,12 @@ from oh_sched.calendr import *
 
 def test_get_intersection_dict():
     oh_list = [
-        'Tue09:00AM-10:00AM',  # 0 — different day, no overlap
-        'Mon09:30AM-10:30AM',  # 1 — overlaps with 3
-        'Mon12:00PM-01:00PM virtual',  # 2 — overlaps with 5
-        'Mon09:00AM-10:00AM',  # 3 — overlaps with 1
-        'Mon10:30AM-11:30AM',  # 4 — no overlap (adjacent to 1)
-        'Mon12:00PM-1:00PM in person'  # 5 — overlaps with 2
+        'Tue 09:00AM-10:00AM',  # 0 — different day, no overlap
+        'Mon 09:30AM-10:30AM',  # 1 — overlaps with 3
+        'Mon 12:00PM-01:00PM virtual',  # 2 — overlaps with 5
+        'Mon 09:00AM-10:00AM',  # 3 — overlaps with 1
+        'Mon 10:30AM-11:30AM',  # 4 — no overlap (adjacent to 1)
+        'Mon 12:00PM-1:00PM in person'  # 5 — overlaps with 2
     ]
 
     oh_int_dict = get_intersection_dict(oh_list)
@@ -32,46 +32,47 @@ def test_get_intersection_dict():
     assert oh_int_dict == oh_int_dict_exp
 
 
-def test_normalize_day_of_week():
-    # Valid cases
-    assert normalize_day_of_week('Mon meeting') == 0
-    assert normalize_day_of_week('tue call') == 1
-    assert normalize_day_of_week('WED deadline') == 2
-    assert normalize_day_of_week('Check on thursday') == 3
-    assert normalize_day_of_week('Friday night') == 4
-    assert normalize_day_of_week('Sat work') == 5
-    assert normalize_day_of_week('Sun brunch') == 6
+def test_parse_day():
+    # Valid cases (notice, we avoid mid-word matches in first two)
+    assert parse_day('Mon leMON meeting') == (0, 'leMON meeting')
+    assert parse_day('tue THUmp call') == (1, 'THUmp call')
+    assert parse_day('WED deadline') == (2, 'deadline')
+    assert parse_day('Check on thursday') == (3, 'Check on')
+    assert parse_day('Friday night') == (4, 'night')
+    assert parse_day('Sat work') == (5, 'work')
+    assert parse_day('Sun brunch') == (6, 'brunch')
 
     # Case insensitivity
-    assert normalize_day_of_week('MONDAY') == 0
-    assert normalize_day_of_week('friDAY') == 4
+    assert parse_day('MONDAY') == (0, '')
+    assert parse_day('friDAY') == (4, '')
 
     # No match (should raise)
-    with pytest.raises(AssertionError, match='no day of week found'):
-        normalize_day_of_week('holiday')
+    with pytest.raises(AssertionError, match='Expected one day of week in'):
+        parse_day('holiday')
 
     # Multiple matches (should raise)
-    with pytest.raises(AssertionError, match='non-unique day of week found'):
-        normalize_day_of_week('mon tue meeting')
+    with pytest.raises(AssertionError, match='Expected one day of week in'):
+        parse_day('mon tue meeting')
 
 
-def test_to_time():
+def test_parse_time():
     # Standard time formats
-    assert to_time('6:30 PM') == time(18, 30)
-    assert to_time('4 aM') == time(4, 0)
-    assert to_time('12:00 am') == time(0, 0)
-    assert to_time('12 Pm') == time(12, 0)
+    assert parse_time('6:30 PM') == (time(18, 30), '')
+    assert parse_time('4 aM') == (time(4, 0), '')
+    assert parse_time('12:00 am') == (time(0, 0), '')
+    assert parse_time('12 Pm') == (time(12, 0), '')
 
     # With extra spaces or additional text
-    assert to_time('at 9 PM OH starts') == time(21, 0)
-    assert to_time('  7:15AM  ') == time(7, 15)
-    assert to_time('9 PM ') == time(21, 0)
+    assert parse_time('at 9 PM OH starts') == \
+           (time(21, 0), 'at  OH starts')
+    assert parse_time('!  7:15AM  !') == (time(7, 15), '!    !')
+    assert parse_time('9 PM extra') == (time(21, 0), 'extra')
 
     for time_str in ['6.30 PM',
                      'noon',
                      '6:30PM to 7:00PM']:
         with pytest.raises(ValueError):
-            to_time(time_str)
+            parse_time(time_str)
 
 
 # Helper function to check equality of datetimes (ignoring tzinfo if needed)
@@ -80,37 +81,56 @@ def check_datetime_equal(dt1, dt2):
 
 
 class TestOfficeHour:
+    def test_init(self):
+        # parse_day & parse_time tested elsewhere
+        test_cases = [('Monday 9 AM - 10 AM Meeting', 'Meeting'),
+                      ('Tue 8:00 AM - 9:30 AM Breakfast', 'Breakfast'),
+                      ('Wed Call 7 AM - 8 AM Standup', 'Call Standup'),
+                      ('Thursday 6 PM - 7 PM Review', 'Review'),
+                      ('Fri Briefing 10 AM - 11 AM', 'Briefing'),
+                      ('Sat 1 PM - 2 PM', ''),
+                      ('Sun 12:00 AM - 1:00 AM Midnight', 'Midnight'),
+                      ('Monday 9 AM - 9 AM', ''),
+                      ('Tuesday 11:15 AM - 12:45 PM Session', 'Session'),
+                      ]
+        for idx, (s, name_exp) in enumerate(test_cases):
+            oh = OfficeHour(s)
+            assert oh.name == name_exp, f'fail case: {idx}'
+
+        with pytest.raises(ValueError, match='doesnt contain unique `-`'):
+            OfficeHour('Mon Check-in 3 PM - 4 PM')
+
     def test_to_tuple(self):
-        oh = OfficeHour('Mon09:00AM-10:00AM')
+        oh = OfficeHour('Mon 09:00AM-10:00AM')
         assert oh.to_tuple() == (0, time(9, 0), time(10, 0))
 
     def test_lt(self):
-        oh1 = OfficeHour('Mon09:00AM-10:00AM')
-        oh2 = OfficeHour('Mon10:00AM-11:00AM')
+        oh1 = OfficeHour('Mon 09:00AM-10:00AM')
+        oh2 = OfficeHour('Mon 10:00AM-11:00AM')
         assert oh1 < oh2
         assert not (oh2 < oh1)
 
     def test_eq(self):
-        oh1 = OfficeHour('Mon09:00AM-10:00AM')
-        oh2 = OfficeHour('Mon9AM-10AM')
-        oh3 = OfficeHour('Mon10:00AM-11:00AM')
+        oh1 = OfficeHour('Mon 09:00AM-10:00AM')
+        oh2 = OfficeHour('Mon 9AM-10AM')
+        oh3 = OfficeHour('Mon 10:00AM-11:00AM')
         assert oh1 == oh2
         assert oh1 != oh3
 
     def test_intersects(self):
         # Same day, overlapping
-        oh1 = OfficeHour('Mon09:00AM-10:30AM')
-        oh2 = OfficeHour('Mon10:00AM-11:00AM')
+        oh1 = OfficeHour('Mon 09:00AM-10:30AM')
+        oh2 = OfficeHour('Mon 10:00AM-11:00AM')
         assert oh1.intersects(oh2)
         assert oh2.intersects(oh1)
 
         # Same day, no overlap
-        oh3 = OfficeHour('Mon11:00AM-12:00PM')
+        oh3 = OfficeHour('Mon 11:00AM-12:00PM')
         assert not oh1.intersects(oh3)
         assert not oh3.intersects(oh1)
 
         # Different days
-        oh4 = OfficeHour('Tue09:00AM-10:00AM')
+        oh4 = OfficeHour('Tue 09:00AM-10:00AM')
         assert not oh1.intersects(oh4)
 
     def test_get_event_kwargs(self):

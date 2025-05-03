@@ -2,20 +2,28 @@ import re
 from datetime import datetime, timedelta
 from functools import total_ordering
 
+import numpy as np
 import pandas as pd
 import tzlocal
 from icalendar import Calendar, Event
 from pytz import timezone
-import numpy as np
+
 
 @total_ordering
 class OfficeHour:
-    def __init__(self, name):
-        self.day_idx = normalize_day_of_week(name)
-        time_start, time_end = name.split('-')
-        self.time_start = to_time(time_start)
-        self.time_end = to_time(time_end)
-        self.name = name
+    def __init__(self, s):
+        self.day_idx, s = parse_day(s)
+
+        if s.count('-') != 1:
+            raise ValueError(f'doesnt contain unique `-`: {s}')
+        time_start, time_end = s.split('-')
+        self.time_start, name0 = parse_time(time_start)
+        self.time_end, name1 = parse_time(time_end)
+
+        # build name (remove name0 or name1 if empty string)
+        name_tup = [name0, name1]
+        name_tup = [s for s in name_tup if s]
+        self.name = ' '.join(name_tup)
 
     def to_tuple(self):
         return self.day_idx, self.time_start, self.time_end
@@ -117,37 +125,50 @@ def get_intersection_dict(oh_list):
     return oh_int_dict
 
 
-def normalize_day_of_week(day_str):
+def parse_day(day_str):
     """ extracts a day of week, as index, from a string
 
     Args:
         day_str (str): string containing some day of the week
 
     Returns:
-        day_idx (int): 0 for monday, 1 for tuesday, ...
+        day_idx (int): 0 for Monday, 1 for Tuesday, ...
+        day_str_clean (str): String with the day and nearby time removed
     """
-    date_regex = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
-    match_list = [bool(re.search(pattern, day_str, re.IGNORECASE))
-                  for pattern in date_regex]
+    day_regexes = [r'\bmon(day)?\b',
+                   r'\btue(s(day)?)?\b',
+                   r'\bwed(nesday)?\b',
+                   r'\bthu(r(sday)?)?\b',
+                   r'\bfri(day)?\b',
+                   r'\bsat(urday)?\b',
+                   r'\bsun(day)?\b']
 
-    assert sum(match_list) < 2, f'non-unique day of week found in: {day_str}'
-    assert sum(match_list) == 1, f'no day of week found in: {day_str}'
+    found = [(i, re.search(pat, day_str, re.IGNORECASE))
+             for i, pat in enumerate(day_regexes)]
+    matches = [(i, m) for i, m in found if m]
 
-    # return idx of first match in list
-    for idx, b in enumerate(match_list):
-        if b:
-            return idx
-    return None
+    assert len(matches) == 1, \
+        f'Expected one day of week in "{day_str}", found {len(matches)}'
+
+    day_idx, match = matches[0]
+
+    # Remove the matched day and any nearby time
+    idx0, idx1 = match.span()
+    day_str_clean = day_str[:idx0] + day_str[idx1:]
+    day_str_clean = day_str_clean.strip(" ,:-")
+
+    return day_idx, day_str_clean
 
 
-def to_time(time_str):
+def parse_time(s):
     """ converts to timedelta, from beginning of day to time_str
 
     Args:
-        time_str (str): comes in one of two formats: "6:30 PM" or "4 AM"
+        s (str): comes in one of two formats: "6:30 PM" or "4 AM"
 
     Returns:
-        delta (timedelta): from beginning of day
+        time (time): time of day
+        s_clean (re.Match): input s, having time removed
     """
     # Match patterns for 12-hour and 24-hour unambiguous formats
     patterns = [
@@ -156,19 +177,27 @@ def to_time(time_str):
     ]
 
     for fmt, pattern in patterns:
-        match_list = pattern.findall(time_str)
+        match_list = pattern.findall(s)
         match len(match_list):
             case 0:
                 # no match found
                 continue
             case 1:
                 # unique match found
-                s_match = match_list[0].replace(' ', '')
-                return datetime.strptime(s_match, fmt).time()
-            case _:
-                raise ValueError(f'Multiple times found: {time_str}')
+                match = pattern.search(s)
+                s_match = match.group().replace(' ', '')
+                time = datetime.strptime(s_match, fmt).time()
 
-    raise ValueError(f'Ambiguous or invalid time string: "{time_str}"')
+                # Remove the matched day and any nearby time
+                idx0, idx1 = match.span()
+                s_clean = s[:idx0] + s[idx1:]
+                s_clean = s_clean.strip(" ,:-")
+
+                return time, s_clean
+            case _:
+                raise ValueError(f'Multiple times found: {s}')
+
+    raise ValueError(f'Ambiguous or invalid time string: "{s}"')
 
 
 def build_calendar(oh_ta_dict, date_start, date_end, **kwargs):
@@ -193,11 +222,11 @@ def build_calendar(oh_ta_dict, date_start, date_end, **kwargs):
         ta_list = [ta.capitalize() for ta in sorted(ta_list)]
         summary = ', '.join(sorted(ta_list))
 
-        oh = OfficeHour(name=oh_name)
+        oh = OfficeHour(s=oh_name)
         _kwargs = oh.get_event_kwargs(summary=summary,
-                                     date_start=date_start,
-                                     date_end=date_end,
-                                     **kwargs)
+                                      date_start=date_start,
+                                      date_end=date_end,
+                                      **kwargs)
 
         # build event with proper attributes of event,
         _kwargs = kwargs | _kwargs
