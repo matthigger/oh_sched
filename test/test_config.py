@@ -9,6 +9,30 @@ def get_tmp(**kwargs):
     return pathlib.Path(tempfile.NamedTemporaryFile(**kwargs).name)
 
 
+def test_to_from_yaml():
+    config_empty = Config()
+    config_full = Config(oh_per_ta=1,
+                         max_ta_per_oh=2,
+                         scale_dict={'a': 1.1, 'b': .9},
+                         date_start='May 1 2025',
+                         date_end='May 2 2025',
+                         tz='America/New_York',
+                         f_out_dict={'a.ics': 'a',
+                                     'b.ics': 'b',
+                                     'all.ics': OH_ALL,
+                                     'leftover.ics': OH_LEFTOVER},
+                         verbose=False)
+
+    for config in [config_empty, config_full]:
+        f_yaml = get_tmp(suffix='.yaml')
+        config.to_yaml(f_yaml)
+        s_yaml = open(f_yaml, mode='r').read()
+        _config = Config.from_yaml(f_yaml)
+        assert config == _config
+
+        f_yaml.unlink()
+
+
 def test_to_ics():
     oh_set = {'a0', 'a1', 'b0', 'b1'}
     oh_ta_dict = {oh: list() for oh in oh_set}

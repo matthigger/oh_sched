@@ -16,9 +16,8 @@ OH_LEFTOVER = 'LEFTOVER'
 
 class Config:
     def __init__(self, oh_per_ta=1, max_ta_per_oh=None, scale_dict=None,
-                 date_start=None, date_end=None, f_out=None, tz=None,
-                 f_out_dict=None,
-                 verbose=True):
+                 date_start=None, date_end=None, f_out=None, f_out_dict=None,
+                 tz=None, verbose=True):
 
         self.oh_per_ta = int(oh_per_ta)
         assert self.oh_per_ta > 0
@@ -75,9 +74,11 @@ class Config:
 
     def to_dict(self):
         d = copy(self.__dict__)
-        if d['f_out'] is not None:
-            d['f_out'] = str(d['f_out'])
+        d['f_out_dict'] = {str(f): v for f, v in self.f_out_dict.items()}
         return d
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
 
     def to_ics(self, oh_ta_dict, verbose=True):
         """ writes schedule to ics files
