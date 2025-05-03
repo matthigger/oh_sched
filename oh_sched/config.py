@@ -46,7 +46,7 @@ class Config:
             'cannot pass both f_out and f_out_dict'
 
         if f_out is None:
-            f_out = 'oh.ics'
+            f_out = 'office_hours.ics'
         if f_out_dict is None:
             f_out_dict = {f_out: OH_ALL}
         self.f_out_dict = {pathlib.Path(f_out): v
