@@ -201,6 +201,9 @@ def build_calendar(oh_ta_dict, date_start, date_end, **kwargs):
 
         # build event with proper attributes of event,
         _kwargs = kwargs | _kwargs
-        cal.add_component(Event(**_kwargs))
+        event = Event()
+        for key, val in _kwargs.items():
+            event.add(key, val)
+        cal.add_component(event)
 
     return cal
