@@ -84,8 +84,8 @@ class Config:
         """ writes schedule to ics files
 
         Args:
-            oh_ta_dict (dict): keys are office hour slots (str), values are
-                list of str, names of TAs assigned to this slot
+            oh_ta_dict (dict): keys are OfficeHour, vals are lists of str (TA
+                names)
 
         Returns:
             f_dict (dict): keys are file names (from self.f_out_dict.keys()),

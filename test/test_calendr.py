@@ -102,7 +102,7 @@ class TestOfficeHour:
 
     def test_to_tuple(self):
         oh = OfficeHour('Mon 09:00AM-10:00AM')
-        assert oh.to_tuple() == (0, time(9, 0), time(10, 0))
+        assert oh.to_tuple() == (0, time(9, 0), time(10, 0), '')
 
     def test_lt(self):
         oh1 = OfficeHour('Mon 09:00AM-10:00AM')

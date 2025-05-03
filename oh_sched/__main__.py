@@ -1,7 +1,7 @@
 import numpy as np
 
 import oh_sched
-from oh_sched import get_intersection_dict
+from oh_sched import get_intersection_dict, OfficeHour
 from oh_sched.config import Config
 from oh_sched.email import find_similar_str
 
@@ -34,7 +34,7 @@ def main(f_csv, config):
     assert not np.isnan(perc_max).any(), 'TA assigned outside availability'
 
     # export to ics
-    oh_ta_dict = {oh_list[oh]: [name_list[ta] for ta in ta_list]
+    oh_ta_dict = {OfficeHour(oh_list[oh]): [name_list[ta] for ta in ta_list]
                   for oh, ta_list in enumerate(oh_ta_match)}
     config.to_ics(oh_ta_dict)
 

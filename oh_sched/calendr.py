@@ -26,7 +26,10 @@ class OfficeHour:
         self.name = ' '.join(name_tup)
 
     def to_tuple(self):
-        return self.day_idx, self.time_start, self.time_end
+        return self.day_idx, self.time_start, self.time_end, self.name
+
+    def __hash__(self):
+        return hash(self.to_tuple())
 
     def __str__(self):
         return f'OfficeHour({self.name})'
@@ -204,8 +207,8 @@ def build_calendar(oh_ta_dict, date_start, date_end, **kwargs):
     """  builds a calendar, a set of events, from oh_ta_dict
 
     Args:
-        oh_ta_dict (dict): keys are office hours slots (see time_str in
-            get_event_kwargs()), values are lists of str (TA names)
+        oh_ta_dict (dict): keys are OfficeHour, vals are lists of str (TA
+            names)
         date_start (str): starting date for office hours for course
             (inclusive), see  get_event_kwargs()
         date_end (str): ending date for office hours for course (inclusive),
@@ -215,14 +218,13 @@ def build_calendar(oh_ta_dict, date_start, date_end, **kwargs):
         cal (Calendar): ready to be exported to ics format
     """
     cal = Calendar()
-    for oh_name, ta_list in oh_ta_dict.items():
+    for oh, ta_list in oh_ta_dict.items():
         if not ta_list:
             # skip oh slots without any TAs
             continue
         ta_list = [ta.capitalize() for ta in sorted(ta_list)]
-        summary = ', '.join(sorted(ta_list))
+        summary = oh.name + ': ' + ', '.join(sorted(ta_list))
 
-        oh = OfficeHour(s=oh_name)
         _kwargs = oh.get_event_kwargs(summary=summary,
                                       date_start=date_start,
                                       date_end=date_end,

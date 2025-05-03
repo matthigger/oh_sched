@@ -67,19 +67,19 @@ which multiplies preferences on slots which match the regex string "Thu" by 1.1 
 
 Office hours take place weekly during a timeslot on one day of the week.  Here are two valid examples:
 ```
-    Mondays 3PM-4PM
-    Tue 11:15am-1 Pm
+    Mondays 3PM-4PM Cargill 097
+    Tue 11:15am-1 Pm Virtual
 ```
-Following either of these examples is sufficient.  Here are the gory parsing details:
+The output `.ics` calendar will include all non-time related string input in the calendar event.  For example, the examples above might produce calendar events:
+```
+    Cargill 097: ta0, ta1
+    Virtual: ta2, ta3, ta4
+```
+where the ta lists are determined by the matching method described above.  Following these examples is sufficient, here are the gory parsing details:
 
-- The day of the week is determined by checking for the case-insensitive three letter abbreviation of the day (e.g. "thu").  See `normalize_day_of_week()` in [calendr.py](oh_sched/calendr.py)
-- Start and end times for office hours are separated by the unique appearance of '-' in the string.
-- Each starting and ending time must follow one of the two formats below:
-```
-    12:15AM
-    1 PM
-```
-which are both case / space insensitive.  See `to_time()` in [calendr.py](oh_sched/calendr.py) for details.
+- The day is given as case-insensitive 3-letter abbreviation or full name (e.g. "thu" or "Thursday").  Note that this must be a separate word in the input (i.e. "Mon9:00AM-10:00AM" is invalid, needs space after "Mon").
+- Start and end times for office hours are separated by the unique appearance of '-'.
+- see `OfficeHours.__init__()` and `parse_day()` / `parse_time()` in [calendr.py](oh_sched/calendr.py) for full details.
 
 # Percentage Max
 
