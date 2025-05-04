@@ -36,7 +36,10 @@ def main(f_csv, config):
     # export to ics
     oh_ta_dict = {OfficeHour(oh_list[oh]): [name_list[ta] for ta in ta_list]
                   for oh, ta_list in enumerate(oh_ta_match)}
-    config.to_ics(oh_ta_dict)
+    cal = oh_sched.build_calendar(oh_ta_dict,
+                                  date_start=config.date_start,
+                                  date_end=config.date_end,
+                                  tz=config.tz)
 
     if config.verbose:
         # print TAs per slot
@@ -63,6 +66,13 @@ def main(f_csv, config):
         for email0, email1 in email_tup_list:
             print(f'{email0} vs \n{email1}\n')
         print('')
+
+    if config.f_out is not None:
+        if config.verbose:
+            print(f'Output ics calendar file: {config.f_out}\n')
+
+        with open(config.f_out, 'wb') as f:
+            f.write(cal.to_ical())
 
 
 if __name__ == '__main__':
