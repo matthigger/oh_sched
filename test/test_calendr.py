@@ -40,7 +40,7 @@ def test_parse_day():
     assert parse_day('Check on thursday') == (3, 'Check on')
     assert parse_day('Friday night') == (4, 'night')
     assert parse_day('Sat work') == (5, 'work')
-    assert parse_day('Sun brunch') == (6, 'brunch')
+    assert parse_day('Sundays brunch') == (6, 'brunch')
 
     # Case insensitivity
     assert parse_day('MONDAY') == (0, '')

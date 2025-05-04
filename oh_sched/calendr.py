@@ -139,13 +139,15 @@ def parse_day(day_str):
         day_idx (int): 0 for Monday, 1 for Tuesday, ...
         day_str_clean (str): String with the day and nearby time removed
     """
-    day_regexes = [r'\bmon(day)?\b',
-                   r'\btue(s(day)?)?\b',
-                   r'\bwed(nesday)?\b',
-                   r'\bthu(r(sday)?)?\b',
-                   r'\bfri(day)?\b',
-                   r'\bsat(urday)?\b',
-                   r'\bsun(day)?\b']
+    day_regexes = [
+        r'\bmon(day)?s?\b',
+        r'\btue(s(day)?)?s?\b',
+        r'\bwed(nesday)?s?\b',
+        r'\bthu(r(sday)?)?s?\b',
+        r'\bfri(day)?s?\b',
+        r'\bsat(urday)?s?\b',
+        r'\bsun(day)?s?\b'
+    ]
 
     found = [(i, re.search(pat, day_str, re.IGNORECASE))
              for i, pat in enumerate(day_regexes)]
