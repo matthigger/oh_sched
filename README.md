@@ -46,15 +46,15 @@ Programmatically, when `oh_per_ta=1`, one may use [scipy.optimize.linear_sum_ass
 
 # Configuration
 
-See [test/config.yaml](test/config.yaml) for default configuration file.
+See [test/config.yaml](test/config.yaml) for example:
 
 - `oh_per_ta`: how many office hours slots assigned to each TA (default: 1)
 - `max_ta_per_oh`: maximum number of TAs which may be assigned to any office hours slot.  By default, no maximum is imposed and all TAs may share a single office hours slot.
-- `f_out`: name of the output ics file of your calendar (default: `oh.ics`)
+- `f_out`: name of the output ics file of your calendar (by default no ics file is written)
 - `verbose`: toggles command line output (default: true)
 - `date_start`: the starting date (inclusive) for office hours in the output ics calendar (default: today)
   - any format readable by [pd.to_datetime()](https://pandas.pydata.org/docs/reference/api/pandas.to_datetime.html) is fine
-- `date_end`: the ending date (inclusive) for office hours in the output ics calendar (default: a week from today)
+- `date_end`: the ending date (inclusive) for office hours in the output ics calendar (default: 6 days from `date_start`, so output is one full week)
 - `scale_dict`: allows the user to apply a multiplier to TA preferences to suit course needs.  For example, if more OH coverage is helpful on Thursday and Friday one could write:
 ```yaml
     scale_dict:

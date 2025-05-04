@@ -3,14 +3,15 @@ import pathlib
 from copy import copy
 from datetime import datetime, timedelta
 
+import pandas as pd
 import pytz
 import yaml
 
 
 class Config:
     def __init__(self, oh_per_ta=1, max_ta_per_oh=None, scale_dict=None,
-                 date_start=None, date_end=None, f_out='office_hours.ics',
-                 tz=None, verbose=True):
+                 date_start=None, date_end=None, f_out=None, tz=None,
+                 verbose=True):
 
         self.oh_per_ta = int(oh_per_ta)
         assert self.oh_per_ta > 0
@@ -26,12 +27,13 @@ class Config:
 
         today = datetime.today()
         if date_start is None:
-            date_start = today.strftime("%b %d %Y")
+            date_start = today.strftime('%b %d %Y')
         self.date_start = str(date_start)
 
         if date_end is None:
-            date_end = (today + timedelta(weeks=1)).strftime(
-                "%b %d %Y")
+            datetime_start = pd.to_datetime(self.date_start)
+            date_end = datetime_start + timedelta(days=6)
+            date_end = date_end.strftime('%b %d %Y')
         self.date_end = str(date_end)
 
         self.f_out = f_out
@@ -66,12 +68,3 @@ class Config:
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
-
-
-if __name__ == '__main__':
-    import oh_sched
-
-    # dump default config to test directory
-    folder = pathlib.Path(oh_sched.__file__).parents[1] / 'test'
-    config = Config()
-    config.to_yaml(folder / 'config.yaml')
