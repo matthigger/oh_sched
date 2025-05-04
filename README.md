@@ -46,15 +46,15 @@ Programmatically, when `oh_per_ta=1`, one may use [scipy.optimize.linear_sum_ass
 
 # Configuration
 
-See [test/config.yaml](test/config.yaml) for default configuration file.
+See [test/config.yaml](test/config.yaml) for example:
 
 - `oh_per_ta`: how many office hours slots assigned to each TA (default: 1)
 - `max_ta_per_oh`: maximum number of TAs which may be assigned to any office hours slot.  By default, no maximum is imposed and all TAs may share a single office hours slot.
-- `f_out`: name of the output ics file of your calendar (default: `oh.ics`)
+- `f_out`: name of the output ics file of your calendar (by default no ics file is written)
 - `verbose`: toggles command line output (default: true)
 - `date_start`: the starting date (inclusive) for office hours in the output ics calendar (default: today)
   - any format readable by [pd.to_datetime()](https://pandas.pydata.org/docs/reference/api/pandas.to_datetime.html) is fine
-- `date_end`: the ending date (inclusive) for office hours in the output ics calendar (default: a week from today)
+- `date_end`: the ending date (inclusive) for office hours in the output ics calendar (default: 6 days from `date_start`, so output is one full week)
 - `scale_dict`: allows the user to apply a multiplier to TA preferences to suit course needs.  For example, if more OH coverage is helpful on Thursday and Friday one could write:
 ```yaml
     scale_dict:
@@ -67,19 +67,19 @@ which multiplies preferences on slots which match the regex string "Thu" by 1.1 
 
 Office hours take place weekly during a timeslot on one day of the week.  Here are two valid examples:
 ```
-    Mondays 3PM-4PM
-    Tue 11:15am-1 Pm
+    Mondays 3PM-4PM Cargill 097
+    Tue 11:15am-1 Pm Virtual
 ```
-Following either of these examples is sufficient.  Here are the gory parsing details:
+The output `.ics` calendar will include all non-time related string input in the calendar event.  For example, the examples above might produce calendar events:
+```
+    Cargill 097: ta0, ta1
+    Virtual: ta2, ta3, ta4
+```
+where the ta lists are determined by the matching method described above.  Following these examples is sufficient, here are the gory parsing details:
 
-- The day of the week is determined by checking for the case-insensitive three letter abbreviation of the day (e.g. "thu").  See `normalize_day_of_week()` in [calendr.py](oh_sched/calendr.py)
-- Start and end times for office hours are separated by the unique appearance of '-' in the string.
-- Each starting and ending time must follow one of the two formats below:
-```
-    12:15AM
-    1 PM
-```
-which are both case / space insensitive.  See `to_time()` in [calendr.py](oh_sched/calendr.py) for details.
+- The day is given as case-insensitive 3-letter abbreviation or full name (e.g. "thu" or "Thursday").  Note that this must be a separate word in the input (i.e. "Mon9:00AM-10:00AM" is invalid, needs space after "Mon").
+- Start and end times for office hours are separated by the unique appearance of '-'.
+- see `OfficeHours.__init__()` and `parse_day()` / `parse_time()` in [calendr.py](oh_sched/calendr.py) for full details.
 
 # Percentage Max
 

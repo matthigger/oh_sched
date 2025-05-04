@@ -1,21 +1,22 @@
-import tempfile
-
 from oh_sched.__main__ import *
 from oh_sched.config import *
+import tempfile
 
 
 def test_main():
-    # paths
-    folder = pathlib.Path(oh_sched.__file__).parents[1] / 'test'
-    f_csv = folder / 'oh_prefs.csv'
-    f_out = tempfile.NamedTemporaryFile(suffix='.ics')
-    f_out = pathlib.Path(f_out.name)
+    test_folder = pathlib.Path(oh_sched.__file__).parents[1] / 'test'
 
-    config = Config(f_out=f_out)
-    main(f_csv=f_csv, config=config)
+    # run main, read in output ics file
+    config = Config(f_out=tempfile.NamedTemporaryFile(suffix='.ics').name)
+    main(f_csv=test_folder / 'oh_prefs.csv', config=config)
 
-    assert f_out.exists()
+    # read in / delete output file
+    s_ics = open(config.f_out, 'r').read()
+    config.f_out.unlink()
 
-    if f_out.exists() and f_out.is_file():
-        # clean up output
-        f_out.unlink()
+    # read in expected output
+    s_ics_expected = open(test_folder / 'office_hours.ics', 'r').read()
+
+    # ensure it matches expected ics file
+    assert s_ics == s_ics_expected
+

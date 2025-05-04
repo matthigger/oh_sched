@@ -1,7 +1,7 @@
 import numpy as np
 
 import oh_sched
-from oh_sched import get_intersection_dict
+from oh_sched import get_intersection_dict, OfficeHour
 from oh_sched.config import Config
 from oh_sched.email import find_similar_str
 
@@ -34,9 +34,12 @@ def main(f_csv, config):
     assert not np.isnan(perc_max).any(), 'TA assigned outside availability'
 
     # export to ics
-    oh_ta_dict = {oh_list[oh]: [name_list[ta] for ta in ta_list]
+    oh_ta_dict = {OfficeHour(oh_list[oh]): [name_list[ta] for ta in ta_list]
                   for oh, ta_list in enumerate(oh_ta_match)}
-    config.to_ics(oh_ta_dict)
+    cal = oh_sched.build_calendar(oh_ta_dict,
+                                  date_start=config.date_start,
+                                  date_end=config.date_end,
+                                  tz=config.tz)
 
     if config.verbose:
         # print TAs per slot
@@ -46,7 +49,7 @@ def main(f_csv, config):
                 continue
 
             ta_csv = ', '.join(ta_list)
-            print(f'{oh} has {len(ta_list)} TAs: {ta_csv}')
+            print(f'{oh.s_orig} has {len(ta_list)} TAs: {ta_csv}')
 
         print('\nPercentage Max Score :')
         print(
@@ -63,6 +66,13 @@ def main(f_csv, config):
         for email0, email1 in email_tup_list:
             print(f'{email0} vs \n{email1}\n')
         print('')
+
+    if config.f_out is not None:
+        if config.verbose:
+            print(f'Output ics calendar file: {config.f_out}\n')
+
+        with open(config.f_out, 'wb') as f:
+            f.write(cal.to_ical())
 
 
 if __name__ == '__main__':
