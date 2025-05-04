@@ -49,7 +49,7 @@ def main(f_csv, config):
                 continue
 
             ta_csv = ', '.join(ta_list)
-            print(f'{oh} has {len(ta_list)} TAs: {ta_csv}')
+            print(f'{oh.s_orig} has {len(ta_list)} TAs: {ta_csv}')
 
         print('\nPercentage Max Score :')
         print(

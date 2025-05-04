@@ -12,6 +12,7 @@ from pytz import timezone
 @total_ordering
 class OfficeHour:
     def __init__(self, s):
+        self.s_orig = s
         self.day_idx, s = parse_day(s)
 
         if s.count('-') != 1:
@@ -32,7 +33,7 @@ class OfficeHour:
         return hash(self.to_tuple())
 
     def __str__(self):
-        return f'OfficeHour({self.name})'
+        return f'OfficeHour({self.s_orig})'
 
     def __lt__(self, other):
         return self.to_tuple() < other.to_tuple()
