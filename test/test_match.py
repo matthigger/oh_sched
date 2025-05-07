@@ -14,6 +14,10 @@ def test_get_scale():
     expected = np.array([2, 10, 5, 1])
     np.testing.assert_array_almost_equal(scale, expected)
 
+    with pytest.warns(UserWarning, match=f'scale not applied, no'):
+        get_scale(oh_list=['a', 'b', 'c'],
+                  scale_dict={'no match': 10})
+
 
 def test_get_perc_max():
     # case0 ------------- everybody gets just what they want

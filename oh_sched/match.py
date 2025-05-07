@@ -121,12 +121,16 @@ def get_scale(oh_list, scale_dict, verbose=True):
         print('\nScaling office hours preferences:')
     scale = np.ones(len(oh_list))
     for regex, mult in scale_dict.items():
+        match_exists = False
         for oh_idx, oh in enumerate(oh_list):
             if re.search(regex, oh):
                 # multiplier is applicable to this office hours slot
                 scale[oh_idx] *= mult
-                print(
-                    f'{oh} multiplied by {mult} (cumulative scale={scale[oh_idx]})')
+                print(f'{oh} multiplied by {mult} (cumulative scale={scale[oh_idx]})')
+                match_exists = True
+
+        if not match_exists:
+            warnings.warn(f'scale not applied, no office hours match:{regex}')
     return scale
 
 
