@@ -28,7 +28,8 @@ def main(f_csv, config):
     oh_ta_match = oh_sched.match(prefs,
                                  oh_int_dict=oh_int_dict,
                                  oh_per_ta=config.oh_per_ta,
-                                 max_ta_per_oh=config.max_ta_per_oh)
+                                 max_ta_per_oh=config.max_ta_per_oh,
+                                 ta_name_list=email_list)
 
     perc_max = oh_sched.get_perc_max(oh_ta_match, prefs=prefs)
     assert not np.isnan(perc_max).any(), 'TA assigned outside availability'
