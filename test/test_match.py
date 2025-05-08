@@ -14,6 +14,10 @@ def test_get_scale():
     expected = np.array([2, 10, 5, 1])
     np.testing.assert_array_almost_equal(scale, expected)
 
+    with pytest.warns(UserWarning, match=f'scale not applied, no'):
+        get_scale(oh_list=['a', 'b', 'c'],
+                  scale_dict={'no match': 10})
+
 
 def test_get_perc_max():
     # case0 ------------- everybody gets just what they want
@@ -85,8 +89,17 @@ def test_match():
         [np.nan, np.nan],
         [10, 5],
     ])
-    with pytest.raises(RuntimeError, match="no availability for TA index: 0"):
+    with pytest.raises(RuntimeError, match="no remaining availability: TA_0"):
         match(prefs, oh_per_ta=1, max_ta_per_oh=1, shuffle=False)
+
+    # case 4 (part 2): No availability error (with name)
+    prefs = np.array([
+        [np.nan, np.nan],
+        [10, 5],
+    ])
+    with pytest.raises(RuntimeError, match="no remaining availability: matt"):
+        match(prefs, oh_per_ta=1, max_ta_per_oh=1, shuffle=False,
+              ta_name_list=['matt', 'zeke'])
 
     # case 5: Compete for single slot (only one can get it)
     prefs = np.array([
@@ -119,9 +132,17 @@ def test_match():
         [9, 1, 1],
         [9, 2, 2],
     ])
-    s_warn = 'not enough OH slots & preferences given to assign all TAs 2 OH slots'
+    s_warn = 'only 1 OH slots assigned: TA_0'
     with pytest.warns(UserWarning, match=s_warn):
         match(prefs, oh_per_ta=2, max_ta_per_oh=1, shuffle=False)
+
+    # case 8 (part 2, breaks out of loop): not enough OH to go around for the TAs
+    prefs = np.array([
+        [9, 1, 1],
+    ])
+    s_warn = 'only 3 OH slots assigned: TA_0'
+    with pytest.warns(UserWarning, match=s_warn):
+        match(prefs, oh_per_ta=4, max_ta_per_oh=1, shuffle=False)
 
     # case 9: avoids intersections (assigning oh0 and oh1 has highest score,
     # but these two slots intersect each other)

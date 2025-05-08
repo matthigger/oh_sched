@@ -42,7 +42,9 @@ By inspection, in this simple case it is best if
 
 This yields a sum of assigned preferences of 4 + 3 + 3 + 4 = 14
 
-Programmatically, when `oh_per_ta=1`, one may use [scipy.optimize.linear_sum_assignment()](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linear_sum_assignment.html) to match TAs to office hours.  To solve for `oh_per_ta > 1` we use a greedy extension which iteratively assigns each TA to the available office hours slot which best suits their preferences.  (There's a bit of detail we leave out here, its necessary to repeat an office hours slot `max_ta_per_oh` times in the implementation, please see [match()](oh_sched/match.py))
+Programmatically, when `oh_per_ta=1`, one may use [scipy.optimize.linear_sum_assignment()](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linear_sum_assignment.html), a Hungarian Algorithm variant, to match TAs to office hours.  Please see  [match()](oh_sched/match.py)) for full detail, but briefly:
+- To solve for `oh_per_ta > 1` we use a greedy extension which iteratively assigns each TA to the available office hours slot which best suits their preferences while excluding previous OH assignments
+- Because each office hours slot may be repeated, each column of the matrix above is repeated per its remaining availability.
 
 # Configuration
 
