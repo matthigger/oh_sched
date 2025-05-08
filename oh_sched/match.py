@@ -13,7 +13,7 @@ STD_SCALE_NOISE = .00001
 
 
 def match(prefs, oh_per_ta, max_ta_per_oh=None, oh_int_dict=None, shuffle=True,
-          seed=0):
+          ta_name_list=None, seed=0):
     """ matches TA to OH slot to maximize sum of prefs achieved
 
     Args:
@@ -27,12 +27,21 @@ def match(prefs, oh_per_ta, max_ta_per_oh=None, oh_int_dict=None, shuffle=True,
             itself
         shuffle (bool): toggles shuffling of tie breaking (seems to prefer
             earlier ta_idx)
+        ta_name_list (list): str associated with each TA (e.g. email).  used for
+            more informative error messages to end user (default is None, TA
+            index used in error messages in this case)
         seed: given to shuffling
 
     Returns:
         oh_ta_match (list of lists): oh_ta_match[oh_idx] is a list of the
             index of all tas assigned particular oh_idx
     """
+    def get_name(idx):
+        if ta_name_list is None:
+            return f'TA_{idx}'
+        else:
+            return ta_name_list[idx]
+
     # set invalid entries with low score
     prefs = copy(prefs)
     prefs[np.isnan(prefs)] = INVALID
@@ -66,6 +75,10 @@ def match(prefs, oh_per_ta, max_ta_per_oh=None, oh_int_dict=None, shuffle=True,
             for _ in range(num_ta_spots_left):
                 pref_list.append(prefs[:, oh_idx])
                 _oh_ta_match.append(ta_list)
+
+        if not pref_list:
+            # no more TA spots left (will warn before returning)
+            break
         _prefs = np.stack(pref_list, axis=1)
 
         if shuffle:
@@ -83,7 +96,7 @@ def match(prefs, oh_per_ta, max_ta_per_oh=None, oh_int_dict=None, shuffle=True,
         # record & validate matches
         for _ta_idx, _oh_idx in zip(ta_idx, oh_idx):
             if _prefs[_ta_idx, _oh_idx] == INVALID:
-                raise RuntimeError(f'no availability for TA index: {_ta_idx}')
+                raise RuntimeError(f'no remaining availability: {get_name(_ta_idx)}')
             _oh_ta_match[_oh_idx].append(_ta_idx)
 
             # get oh_idx (in original indexing, recall that _oh_ta_match may
@@ -97,9 +110,9 @@ def match(prefs, oh_per_ta, max_ta_per_oh=None, oh_int_dict=None, shuffle=True,
     # count oh per ta
     _oh_per_ta, _ = np.histogram(list(chain.from_iterable(oh_ta_match)),
                                  bins=np.arange(-.5, num_ta + .5))
-    if (_oh_per_ta != oh_per_ta).any():
-        warnings.warn(f'not enough OH slots & preferences given to'
-                      f' assign all TAs {oh_per_ta} OH slots')
+    for _ta_idx, n in enumerate(_oh_per_ta):
+        if n != oh_per_ta:
+            warnings.warn(f'only {n} OH slots assigned: {get_name(_ta_idx)}')
 
     return oh_ta_match
 
